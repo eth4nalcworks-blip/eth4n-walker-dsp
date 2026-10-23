@@ -1,0 +1,707 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ETH4N / Walker dsp</title>
+<meta name="description" content="ETH4N / Ayumu Iida と、プラグインメーカー Walker dsp。">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000000">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff">
+<meta property="og:type" content="website">
+<meta property="og:title" content="ETH4N / Walker dsp">
+<meta property="og:description" content="ETH4N / Ayumu Iida と、プラグインメーカー Walker dsp。">
+<meta name="twitter:card" content="summary">
+<link rel="icon" type="image/png" href="img/favicon.png">
+<link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300..700&family=Geist+Mono:wght@400..500&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap">
+<style>
+/* Base reset */
+:root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px) }
+body { margin: 0 }
+img { max-width: 100% }
+[hidden] { display: none !important }
+
+/* Layout: the same skeleton (a sticky bar of tabs, one panel per tab). The treatment follows
+   Nothing: a tightly tracked grotesk for display, mono labels, hairlines instead of boxes,
+   pill controls, rounded dark tiles, plenty of air, and a single red signal dot. */
+:root {
+  --bg: #000000;
+  --fg: #ffffff;
+  --mute: #8c8c8c;
+  --line: #262626;
+  --card: #111111;
+  --card-hi: #1b1b1b;
+  --red: #d71921;
+  --plate: #000000;       /* the spectrum and the product tiles stay dark in both themes */
+  --plate-fg: #ffffff;
+  --plate-dim: #6e6e6e;
+  --plate-line: #262626;
+  --r-lg: 24px;
+  --r-md: 16px;
+  --sans: "Geist", "Zen Kaku Gothic New", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, system-ui, sans-serif;
+  --mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg: #ffffff; --fg: #000000; --mute: #6b6b6b; --line: #e3e3e3; --card: #f2f2f2; --card-hi: #e8e8e8;
+    color-scheme: light;
+  }
+}
+:root[data-theme="light"] {
+  --bg: #ffffff; --fg: #000000; --mute: #6b6b6b; --line: #e3e3e3; --card: #f2f2f2; --card-hi: #e8e8e8;
+  color-scheme: light;
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--sans);
+  font-size: 16px;
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+}
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0 0 auto;
+  height: env(safe-area-inset-top, 0px);
+  z-index: 10;
+  background: var(--bg);
+}
+.site { overflow-x: clip }
+a { color: inherit }
+h1, h2, h3, p, ul, ol, dl, dd, figure { margin: 0 }
+ul, ol { padding: 0; list-style: none }
+button { font: inherit }
+:focus-visible { outline: 2px solid var(--fg); outline-offset: 3px }
+.vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap }
+
+.wrap {
+  max-width: 1240px;
+  margin-inline: auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+
+/* ---------- shared bits ---------- */
+.display {
+  font-family: var(--sans);
+  font-weight: 500;
+  text-transform: uppercase;
+  line-height: .9;
+  letter-spacing: -.045em;
+}
+.label {
+  font-family: var(--mono);
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  line-height: 1.5;
+}
+.mark {
+  --h: 26px;
+  display: block;
+  height: var(--h);
+  width: calc(var(--h) * .6917);
+  background: currentColor;
+  -webkit-mask: url(img/walker-mark.png) center / contain no-repeat;
+  mask: url(img/walker-mark.png) center / contain no-repeat;
+}
+.mark.bold { -webkit-mask-image: url(img/walker-mark-bold.png); mask-image: url(img/walker-mark-bold.png) }
+.pill {
+  padding: 8px 16px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--mute);
+  cursor: pointer;
+  transition: background .2s, color .2s, border-color .2s;
+}
+.pill:hover { color: var(--fg); border-color: var(--mute) }
+.pill[aria-selected="true"], .pill[aria-pressed="true"] { background: var(--fg); border-color: var(--fg); color: var(--bg) }
+.circle {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  font-family: var(--mono);
+  font-size: 14px;
+  transition: background .2s, color .2s, border-color .2s;
+}
+
+/* ---------- masthead + tabs ---------- */
+.masthead {
+  position: sticky;
+  top: env(safe-area-inset-top, 0px);
+  z-index: 10;
+  background: var(--bg);
+  background: color-mix(in srgb, var(--bg) 84%, transparent);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--line);
+}
+.masthead-in {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-block: 12px;
+}
+.brand { display: grid; place-items: center; width: 40px; height: 40px; color: var(--fg); border-radius: 50% }
+.brand .mark { --h: 30px }
+.tabs { display: flex; gap: 2px; padding: 4px; border: 1px solid var(--line); border-radius: 999px }
+.tab { border-color: transparent }
+.tab:hover { border-color: transparent }
+
+.panel { padding-top: clamp(48px, 7vw, 96px) }
+.panel-title { font-size: clamp(44px, 8vw, 104px); margin-bottom: clamp(32px, 5vw, 56px) }
+
+/* ---------- home ---------- */
+.eyebrow { display: flex; align-items: center; gap: 10px; color: var(--mute); margin-bottom: clamp(20px, 3vw, 32px) }
+.eyebrow::before { content: ""; flex: none; width: 6px; height: 6px; border-radius: 50%; background: var(--red) }
+.hero-name { display: grid; gap: clamp(10px, 1.6vw, 20px) }
+.hero-name .solid { font-size: clamp(84px, 23vw, 280px); line-height: .8 }
+.hero-name .sub {
+  font-family: var(--sans);
+  font-weight: 300;
+  font-size: clamp(28px, 6.4vw, 80px);
+  line-height: 1;
+  letter-spacing: -.03em;
+  color: var(--mute);
+}
+
+.scope {
+  margin-top: clamp(40px, 6vw, 72px);
+  border: 1px solid var(--plate-line);
+  border-radius: var(--r-lg);
+  background: var(--plate);
+  color: var(--plate-fg);
+  overflow: hidden;
+}
+.scope-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 20px 0;
+  color: var(--plate-dim);
+}
+.scope-live { display: inline-flex; align-items: center; gap: 8px; color: var(--plate-fg) }
+.scope-live::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--red) }
+.scope-read {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 28px;
+  padding: 10px 20px 0;
+  font-variant-numeric: tabular-nums;
+}
+.scope-read div { display: flex; gap: 10px }
+.scope-read dt { color: var(--plate-dim) }
+.scope-canvas { display: block; width: 100%; height: clamp(180px, 24vw, 290px); margin-top: 8px }
+
+.works { margin-top: clamp(40px, 6vw, 72px) }
+.works-label { color: var(--mute); margin-bottom: 14px }
+.player {
+  display: block;
+  width: 100%;
+  height: 152px;
+  border: 0;
+  border-radius: 12px;
+  color-scheme: normal;   /* match the embed, or the browser paints an opaque backdrop behind it */
+}
+
+/* ---------- walker dsp ---------- */
+.walker-head {
+  display: flex;
+  align-items: center;
+  gap: clamp(16px, 2.4vw, 28px);
+  margin-bottom: clamp(40px, 6vw, 72px);
+}
+.walker-head .panel-title { margin-bottom: 0; min-width: 0 }
+.maker-tile {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: clamp(56px, 8vw, 96px);
+  aspect-ratio: 1;
+  border-radius: var(--r-md);
+  background: var(--card);
+  color: var(--fg);
+}
+.maker-tile .mark { --h: clamp(36px, 5.2vw, 64px) }
+
+.products {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(12px, 1.8vw, 24px);
+}
+.product {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  border: 1px solid var(--plate-line);
+  border-radius: var(--r-lg);
+  background: var(--plate);
+  color: var(--plate-fg);
+  text-decoration: none;
+  overflow: hidden;
+  transition: border-color .25s;
+}
+.product:hover { border-color: #4d4d4d }
+.plate {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(14px, 2vw, 22px);
+  padding: clamp(20px, 2.8vw, 32px) clamp(20px, 2.8vw, 32px) 0;
+}
+.plate-logo { height: clamp(36px, 4.4vw, 56px); width: auto; max-width: 100%; align-self: flex-start }
+.plate-logo.lift { filter: brightness(1.6) saturate(1.15) }  /* its navy strokes sink into the dark plate */
+/* Both shots sit in the same 5:4 box so the two tiles line up; the plate is the
+   plug-ins' own background, so the letterbox does not show. */
+.plate-shot {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 5 / 4;
+  object-fit: contain;
+  transition: transform .6s cubic-bezier(.2, .7, .2, 1);
+}
+.product:hover .plate-shot { transform: scale(1.015) }
+.meta {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1fr) auto;
+  align-items: center;
+  margin: clamp(14px, 2vw, 22px) clamp(20px, 2.8vw, 32px) clamp(20px, 2.8vw, 28px);
+  padding-top: 16px;
+  border-top: 1px solid var(--plate-line);
+  color: var(--plate-dim);
+}
+.meta span { white-space: nowrap }
+.meta .ver { color: var(--plate-fg) }
+.meta .go { border-color: var(--plate-line); color: var(--plate-fg) }
+.product:hover .go { background: var(--plate-fg); border-color: var(--plate-fg); color: var(--plate) }
+
+/* ---------- history ---------- */
+.filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 32px }
+.log { border-top: 1px solid var(--line) }
+.log li {
+  display: grid;
+  grid-template-columns: 112px 136px minmax(0, 1fr);
+  gap: 8px 24px;
+  align-items: baseline;
+  padding-block: 20px;
+  border-bottom: 1px solid var(--line);
+}
+.log .date { font: 400 13px/1.6 var(--mono); color: var(--mute); font-variant-numeric: tabular-nums }
+.tag { justify-self: start; padding: 2px 10px; border: 1px solid var(--line); border-radius: 999px; font-size: 10px }
+.log h3 { font-weight: 500; font-size: 16px; line-height: 1.6 }
+.log h3 span { margin-left: 14px; font-weight: 400; font-size: 14px; color: var(--mute) }
+.is-sample .tag { border-style: dashed; color: var(--mute) }
+.sample-mark {
+  display: inline-block;
+  margin-left: 12px;
+  padding: 0 8px;
+  border: 1px dashed var(--mute);
+  border-radius: 999px;
+  color: var(--mute);
+  font: 400 10px/1.7 var(--mono);
+  letter-spacing: .08em;
+  vertical-align: middle;
+}
+.log-empty { padding-block: 20px; color: var(--mute) }
+
+/* ---------- links ---------- */
+.tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(12px, 1.6vw, 20px) }
+.tiles > li { display: flex }   /* the tile fills its row, so a row of tiles share one height */
+.tile {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 40px;
+  min-height: 190px;
+  padding: 24px;
+  border-radius: var(--r-lg);
+  background: var(--card);
+  text-decoration: none;
+  transition: background .2s;
+}
+a.tile:hover { background: var(--card-hi) }
+.tile-name { font-weight: 500; font-size: clamp(26px, 2.6vw, 34px); line-height: 1.1; letter-spacing: -.02em; overflow-wrap: anywhere }
+.tile-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 12px;
+  font: 400 13px/1.5 var(--mono);
+  color: var(--mute);
+}
+.tile-meta .circle { color: var(--fg) }
+a.tile:hover .circle { background: var(--fg); border-color: var(--fg); color: var(--bg) }
+.mail { min-width: 0; color: var(--fg); overflow-wrap: anywhere; text-decoration: none }
+.mail:hover { text-decoration: underline }
+.copy { color: var(--fg) }
+
+/* ---------- footer ---------- */
+.foot { margin-top: clamp(96px, 12vw, 160px); border-top: 1px solid var(--line) }
+.foot-in { display: flex; align-items: center; gap: 12px; padding-block: 24px 40px; color: var(--mute) }
+.foot .mark { --h: 20px }
+
+@media (prefers-reduced-motion: no-preference) {
+  .scope-live::before { animation: blink 1.4s steps(2, jump-none) infinite }
+  @keyframes blink { 50% { opacity: .2 } }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pill, .circle, .product, .plate-shot, .tile { transition: none }
+  .product:hover .plate-shot { transform: none }
+}
+
+@media (max-width: 900px) {
+  .products { grid-template-columns: minmax(0, 1fr) }
+  .tiles { grid-template-columns: minmax(0, 1fr) }
+  .tile { min-height: 0 }
+}
+@media (max-width: 640px) {
+  .masthead-in { gap: 12px; padding-block: 10px }
+  .brand { width: 32px; height: 32px }
+  .brand .mark { --h: 26px }
+  .tab-more { display: none }
+  .tabs { flex: 1; min-width: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); padding: 3px }
+  .tab { padding: 8px 0; font-size: 10px; letter-spacing: .04em }
+  .log li { grid-template-columns: auto minmax(0, 1fr) }
+  .log li > h3 { grid-column: 1 / -1 }
+  .log h3 span { display: block; margin-left: 0 }
+  .scope-read { gap: 4px 18px }
+}
+</style>
+</head>
+<body>
+<div class="site" lang="ja">
+
+<header class="masthead">
+  <div class="wrap masthead-in">
+    <a class="brand" href="#home" data-tab="home" aria-label="ETH4N / Walker dsp">
+      <span class="mark bold" aria-hidden="true"></span>
+    </a>
+    <div class="tabs" role="tablist" aria-label="ページ">
+      <button type="button" class="tab pill label" role="tab" id="tab-home" aria-controls="home" aria-selected="true">Home</button>
+      <button type="button" class="tab pill label" role="tab" id="tab-walker" aria-controls="walker" aria-selected="false" tabindex="-1">Walker<span class="tab-more"> dsp</span></button>
+      <button type="button" class="tab pill label" role="tab" id="tab-history" aria-controls="history" aria-selected="false" tabindex="-1">History</button>
+      <button type="button" class="tab pill label" role="tab" id="tab-links" aria-controls="links" aria-selected="false" tabindex="-1">Links</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <!-- HOME -->
+  <section class="panel wrap" id="home" role="tabpanel" aria-labelledby="tab-home">
+    <p class="eyebrow label">Composition — Arrangement — Mixing — Mastering — DSP</p>
+    <h1 class="hero-name">
+      <span class="solid display">ETH4N</span>
+      <span class="sub">Ayumu Iida</span>
+    </h1>
+
+    <figure class="scope">
+      <figcaption class="scope-head label">
+        <span>OSC A · SAW · BARS</span>
+        <span class="scope-live">Live</span>
+      </figcaption>
+      <dl class="scope-read label">
+        <div><dt>F0</dt><dd>55.00 Hz</dd></div>
+        <div><dt>Note</dt><dd>A1</dd></div>
+        <div><dt>Partials</dt><dd><span id="r-parts">363</span> / 512</dd></div>
+        <div><dt>Prism</dt><dd id="r-prism">+0.000</dd></div>
+        <div><dt>Phaser</dt><dd id="r-phase">0.00</dd></div>
+      </dl>
+      <canvas class="scope-canvas" id="spec" role="img" aria-label="55 Hz のノコギリ波を加算合成で鳴らしたときの、倍音（パーシャル）ごとの音量"></canvas>
+    </figure>
+
+    <section class="works" aria-labelledby="works-h">
+      <h2 class="works-label label" id="works-h">Mixing Works</h2>
+      <iframe class="player" src="https://open.spotify.com/embed/playlist/7AB48rMOlIJWbZpCy5cCyp?utm_source=generator&amp;theme=0" allowfullscreen allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy" title="Mixing Works（Spotify）"></iframe>
+    </section>
+  </section>
+
+  <!-- WALKER DSP -->
+  <section class="panel wrap" id="walker" role="tabpanel" aria-labelledby="tab-walker" hidden>
+    <div class="walker-head">
+      <div class="maker-tile"><span class="mark" role="img" aria-label="Walker dsp のロゴ"></span></div>
+      <h2 class="panel-title display">Walker dsp</h2>
+    </div>
+
+    <div class="products">
+      <a class="product" id="siren" href="https://eth4n-alc.booth.pm/items/8639530" target="_blank" rel="noopener" aria-label="SIREN（BOOTH の商品ページ）">
+        <h3 class="vh">SIREN</h3>
+        <div class="plate">
+          <img class="plate-logo" src="img/siren-logo.webp" alt="SIREN" width="1000" height="245">
+          <img class="plate-shot" src="img/siren-ui.webp" alt="SIREN の画面" width="1600" height="1013" loading="lazy">
+        </div>
+        <p class="meta label"><span class="ver">v0.16.0 Beta</span><span>VST3</span><span>AU</span><span class="go circle" aria-hidden="true">↗</span></p>
+      </a>
+
+      <a class="product" id="aquamarine" href="https://eth4n-alc.booth.pm/items/8761884" target="_blank" rel="noopener" aria-label="AQUAMARINE（BOOTH の商品ページ）">
+        <h3 class="vh">AQUAMARINE</h3>
+        <div class="plate">
+          <img class="plate-logo lift" src="img/aquamarine-logo.webp" alt="AQUAMARINE" width="1200" height="166">
+          <img class="plate-shot" src="img/aquamarine-ui.webp" alt="AQUAMARINE の画面" width="1520" height="1244" loading="lazy">
+        </div>
+        <p class="meta label"><span class="ver">v0.6.7</span><span>VST3</span><span>AU</span><span class="go circle" aria-hidden="true">↗</span></p>
+      </a>
+    </div>
+  </section>
+
+  <!-- HISTORY -->
+  <section class="panel wrap" id="history" role="tabpanel" aria-labelledby="tab-history" hidden>
+    <h2 class="panel-title display">History</h2>
+    <div class="filters" role="group" aria-label="名義で絞り込む">
+      <button type="button" class="f pill label" id="f-all" data-f="all" aria-pressed="true">All</button>
+      <button type="button" class="f pill label" id="f-eth4n" data-f="eth4n" aria-pressed="false">ETH4N</button>
+      <button type="button" class="f pill label" id="f-iida" data-f="iida" aria-pressed="false">Ayumu Iida</button>
+    </div>
+    <!-- 新しいものを上に。data-tag は eth4n / iida -->
+    <ol class="log" id="log">
+      <!-- 記入例：実際の作品に置き換えるか削除 -->
+      <li data-tag="eth4n" class="is-sample">
+        <span class="date">YYYY.MM.DD</span>
+        <span class="tag label">ETH4N</span>
+        <h3>タイトル<span>レーベル / 配信先</span><span class="sample-mark">記入例</span></h3>
+      </li>
+      <li data-tag="iida" class="is-sample">
+        <span class="date">YYYY.MM.DD</span>
+        <span class="tag label">Ayumu Iida</span>
+        <h3>アーティスト「曲名」<span>Mix / Mastering</span><span class="sample-mark">記入例</span></h3>
+      </li>
+    </ol>
+    <p class="log-empty" id="log-empty" hidden>記録はまだありません。</p>
+  </section>
+
+  <!-- LINKS -->
+  <section class="panel wrap" id="links" role="tabpanel" aria-labelledby="tab-links" hidden>
+    <h2 class="panel-title display">Links</h2>
+    <ul class="tiles">
+      <li>
+        <a class="tile" href="https://x.com/eth4n_alc" target="_blank" rel="noopener">
+          <span class="tile-name">X</span>
+          <span class="tile-meta"><span>@eth4n_alc</span><span class="circle" aria-hidden="true">↗</span></span>
+        </a>
+      </li>
+      <li>
+        <a class="tile" href="https://soundcloud.com/eth4nalc" target="_blank" rel="noopener">
+          <span class="tile-name">SoundCloud</span>
+          <span class="tile-meta"><span>eth4nalc</span><span class="circle" aria-hidden="true">↗</span></span>
+        </a>
+      </li>
+      <li>
+        <div class="tile">
+          <span class="tile-name">Contact</span>
+          <span class="tile-meta"><a class="mail" id="mail" href="mailto:eth4n.alc.works@gmail.com">eth4n.alc.works@gmail.com</a><button type="button" class="copy pill label" id="copy-mail">Copy</button></span>
+        </div>
+      </li>
+    </ul>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="wrap foot-in label">
+    <span class="mark bold" aria-hidden="true"></span>
+    <span>© 2026 ETH4N / Ayumu Iida — Walker dsp</span>
+  </div>
+</footer>
+
+</div>
+
+<script>
+// Tabs: one panel at a time; the panel id is also the #hash, so a link can open a tab.
+(() => {
+  const tabs = [...document.querySelectorAll('[role="tab"]')];
+  const ids = tabs.map(t => t.getAttribute('aria-controls'));
+
+  function select(id, { focus = false, scroll = true } = {}) {
+    if (!ids.includes(id)) return;
+    tabs.forEach(t => {
+      const on = t.getAttribute('aria-controls') === id;
+      t.setAttribute('aria-selected', String(on));
+      t.tabIndex = on ? 0 : -1;
+      document.getElementById(t.getAttribute('aria-controls')).hidden = !on;
+      if (on && focus) t.focus();
+    });
+    try { history.replaceState(null, '', '#' + id); } catch (e) {}
+    if (scroll) window.scrollTo({ top: 0, behavior: 'instant' });
+  }
+
+  tabs.forEach((t, i) => {
+    t.addEventListener('click', () => select(ids[i]));
+    t.addEventListener('keydown', e => {
+      const step = { ArrowRight: 1, ArrowLeft: -1 }[e.key];
+      const to = e.key === 'Home' ? 0 : e.key === 'End' ? tabs.length - 1
+               : step ? (i + step + tabs.length) % tabs.length : -1;
+      if (to < 0) return;
+      e.preventDefault();
+      select(ids[to], { focus: true });
+    });
+  });
+  document.querySelectorAll('[data-tab]').forEach(a => a.addEventListener('click', e => {
+    e.preventDefault();
+    select(a.dataset.tab);
+  }));
+  window.addEventListener('hashchange', () => select(location.hash.slice(1)));
+  select(location.hash.slice(1), { scroll: false });
+})();
+
+// History: filter by name
+(() => {
+  const log = document.getElementById('log');
+  const empty = document.getElementById('log-empty');
+  const buttons = document.querySelectorAll('.f');
+  buttons.forEach(btn => btn.addEventListener('click', () => {
+    const f = btn.dataset.f;
+    buttons.forEach(b => b.setAttribute('aria-pressed', String(b === btn)));
+    let shown = 0;
+    log.querySelectorAll('li').forEach(li => {
+      const on = f === 'all' || li.dataset.tag === f;
+      li.hidden = !on;
+      if (on) shown++;
+    });
+    empty.hidden = shown > 0;
+  }));
+})();
+
+// Links: copy the mail address. If the clipboard is refused, select the text
+// so the viewer can copy it themselves.
+(() => {
+  const btn = document.getElementById('copy-mail');
+  const mail = document.getElementById('mail');
+  let timer = 0;
+  const show = text => {
+    btn.textContent = text;
+    clearTimeout(timer);
+    timer = setTimeout(() => { btn.textContent = 'Copy'; }, 1600);
+  };
+  const select = () => {
+    const range = document.createRange();
+    range.selectNodeContents(mail);
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+    show('Selected');
+  };
+  btn.addEventListener('click', () => {
+    if (navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(mail.textContent).then(() => show('Copied'), select);
+    } else {
+      select();
+    }
+  });
+})();
+
+// Home: the partials of a 55 Hz saw, drawn the way SIREN's BARS view does,
+// with PRISM slowly stretching the series and a harmonic phaser sweeping through it.
+(() => {
+  const cv = document.getElementById('spec');
+  const ctx = cv.getContext('2d');
+  const rParts = document.getElementById('r-parts');
+  const rPrism = document.getElementById('r-prism');
+  const rPhase = document.getElementById('r-phase');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)');
+
+  const F0 = 55, FMIN = 20, FMAX = 20000, MAX_PARTIALS = 512, FLOOR_DB = -60;
+  const LOG_SPAN = Math.log(FMAX / FMIN);
+  const GRID = [[50, '50'], [100, '100'], [200, '200'], [500, '500'], [1000, '1k'],
+                [2000, '2k'], [5000, '5k'], [10000, '10k']];
+  const C = { grid: '#1f1f1f', dim: '#6e6e6e', bar: '#ffffff', peak: '#d71921' };
+
+  let W = 1, H = 1, dpr = 1, pad = 20, raf = 0, onScreen = true;
+  const t0 = performance.now();
+
+  function resize() {
+    const r = cv.getBoundingClientRect();
+    dpr = Math.min(2, window.devicePixelRatio || 1);
+    W = Math.max(1, Math.round(r.width * dpr));
+    H = Math.max(1, Math.round(r.height * dpr));
+    pad = 20 * dpr;                  // lines up with the readouts above
+    cv.width = W;
+    cv.height = H;
+  }
+  const xOf = f => pad + Math.log(f / FMIN) / LOG_SPAN * (W - 2 * pad);
+
+  function draw(t) {
+    const stretch = 0.035 * Math.sin(t * 2 * Math.PI / 23);
+    const phase = (t / 9) % 1;
+    const axis = 30 * dpr, top = 10 * dpr, ph = H - axis - top, base = top + ph;
+
+    ctx.clearRect(0, 0, W, H);
+    ctx.lineWidth = dpr;
+    ctx.strokeStyle = C.grid;
+    ctx.fillStyle = C.dim;
+    ctx.font = `${10 * dpr}px "Geist Mono", ui-monospace, monospace`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    for (const [f, label] of GRID) {
+      const x = Math.round(xOf(f)) + 0.5;
+      ctx.beginPath(); ctx.moveTo(x, top); ctx.lineTo(x, base); ctx.stroke();
+      ctx.fillText(label, x, base + axis / 2);
+    }
+    ctx.beginPath(); ctx.moveTo(pad, base + 0.5); ctx.lineTo(W - pad, base + 0.5); ctx.stroke();
+
+    let count = 0, prevX = -Infinity;
+    ctx.strokeStyle = C.bar;
+    for (let n = 1; n <= MAX_PARTIALS; n++) {
+      const f = F0 * Math.pow(n, 1 + stretch);
+      if (f > FMAX) break;
+      count++;
+      const comb = 0.5 + 0.5 * Math.cos(2 * Math.PI * (n / 7 - phase));
+      const amp = (1 / n) * (1 - 0.92 * comb ** 6);
+      const k = (20 * Math.log10(Math.max(amp, 1e-6)) - FLOOR_DB) / -FLOOR_DB;
+      if (k <= 0) continue;
+      const x = Math.round(xOf(f)) + 0.5, y = base - k * ph;
+      // Fade the top octaves where partials crowd closer than a few pixels.
+      ctx.globalAlpha = (0.3 + 0.7 * k) * Math.min(1, (x - prevX) / (4 * dpr));
+      prevX = x;
+      ctx.lineWidth = (n <= 4 ? 3 : 1) * dpr;
+      ctx.beginPath(); ctx.moveTo(x, base); ctx.lineTo(x, y); ctx.stroke();
+      if (n <= 24) {
+        // The fundamental's cap is the one red signal.
+        ctx.fillStyle = n === 1 ? C.peak : C.bar;
+        ctx.fillRect(x - 2 * dpr, y - dpr, 4 * dpr, 2 * dpr);
+      }
+    }
+    ctx.globalAlpha = 1;
+
+    rParts.textContent = String(count);
+    rPrism.textContent = (stretch >= 0 ? '+' : '−') + Math.abs(stretch).toFixed(3);
+    rPhase.textContent = phase.toFixed(2);
+  }
+
+  function frame(now) {
+    draw((now - t0) / 1000);
+    raf = requestAnimationFrame(frame);
+  }
+  function update() {
+    cancelAnimationFrame(raf);
+    raf = 0;
+    if (reduce.matches || !onScreen || document.hidden) {
+      draw(reduce.matches ? 0 : (performance.now() - t0) / 1000);
+    } else {
+      raf = requestAnimationFrame(frame);
+    }
+  }
+
+  resize();
+  draw(0);
+  new ResizeObserver(() => { resize(); update(); }).observe(cv);
+  new IntersectionObserver(([e]) => { onScreen = e.isIntersecting; update(); }).observe(cv);
+  document.addEventListener('visibilitychange', update);
+  reduce.addEventListener?.('change', update);
+  document.fonts?.ready.then(() => { resize(); update(); });
+})();
+</script>
+</body>
+</html>
