@@ -173,8 +173,6 @@ button { font: inherit }
   min-height: min(calc(100vh - var(--mast, 68px) - var(--panel-top) - 20px), 880px);
   min-height: min(calc(100svh - var(--mast, 68px) - var(--panel-top) - 20px), 880px);
 }
-.eyebrow { display: flex; align-items: center; gap: 10px; color: var(--mute); margin-bottom: clamp(12px, 1.8vh, 20px) }
-.eyebrow::before { content: ""; flex: none; width: 6px; height: 6px; border-radius: 50%; background: var(--red) }
 .hero-name { display: grid; gap: clamp(6px, 1.2vh, 16px) }
 .hero-name .solid {
   font-size: clamp(64px, min(21vw, 24vh), 260px);
@@ -422,7 +420,6 @@ a.tile:hover .circle { background: var(--fg); border-color: var(--fg); color: va
   <!-- HOME -->
   <section class="panel wrap" id="home" role="tabpanel" aria-labelledby="tab-home">
     <div class="hero">
-    <p class="eyebrow label">Composition — Arrangement — Mixing — Mastering — DSP</p>
     <h1 class="hero-name">
       <span class="solid display">ETH4N</span>
       <span class="sub">Ayumu Iida</span>
