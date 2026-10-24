@@ -160,25 +160,42 @@ button { font: inherit }
 .tab { border-color: transparent }
 .tab:hover { border-color: transparent }
 
-.panel { padding-top: clamp(48px, 7vw, 96px) }
+.panel { --panel-top: clamp(16px, 2.2vw, 28px); padding-top: var(--panel-top) }
 .panel-title { font-size: clamp(44px, 8vw, 104px); margin-bottom: clamp(32px, 5vw, 56px) }
 
 /* ---------- home ---------- */
-.eyebrow { display: flex; align-items: center; gap: 10px; color: var(--mute); margin-bottom: clamp(20px, 3vw, 32px) }
+/* The name and the spectrum share the first screen: the hero is one screen tall
+   under the sticky bar (capped on very tall screens), the name is sized by the
+   viewport's height as well as its width, and the spectrum takes what is left. */
+.hero {
+  display: flex;
+  flex-direction: column;
+  min-height: min(calc(100vh - var(--mast, 68px) - var(--panel-top) - 20px), 880px);
+  min-height: min(calc(100svh - var(--mast, 68px) - var(--panel-top) - 20px), 880px);
+}
+.eyebrow { display: flex; align-items: center; gap: 10px; color: var(--mute); margin-bottom: clamp(12px, 1.8vh, 20px) }
 .eyebrow::before { content: ""; flex: none; width: 6px; height: 6px; border-radius: 50%; background: var(--red) }
-.hero-name { display: grid; gap: clamp(10px, 1.6vw, 20px) }
-.hero-name .solid { font-size: clamp(84px, 23vw, 280px); line-height: .8 }
+.hero-name { display: grid; gap: clamp(6px, 1.2vh, 16px) }
+.hero-name .solid {
+  font-size: clamp(64px, min(21vw, 24vh), 260px);
+  font-size: clamp(64px, min(21vw, 24svh), 260px);
+  line-height: .8;
+}
 .hero-name .sub {
   font-family: var(--sans);
   font-weight: 300;
-  font-size: clamp(28px, 6.4vw, 80px);
+  font-size: clamp(24px, min(6.4vw, 7vh), 80px);
+  font-size: clamp(24px, min(6.4vw, 7svh), 80px);
   line-height: 1;
   letter-spacing: -.03em;
   color: var(--mute);
 }
 
 .scope {
-  margin-top: clamp(40px, 6vw, 72px);
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  margin-top: clamp(20px, 3.4vh, 40px);
   border: 1px solid var(--plate-line);
   border-radius: var(--r-lg);
   background: var(--plate);
@@ -203,7 +220,8 @@ button { font: inherit }
 }
 .scope-read div { display: flex; gap: 10px }
 .scope-read dt { color: var(--plate-dim) }
-.scope-canvas { display: block; width: 100%; height: clamp(180px, 24vw, 290px); margin-top: 8px }
+/* Sized by the flexbox, never by its own pixel buffer (flex-basis 0, explicit minimum). */
+.scope-canvas { display: block; width: 100%; flex: 1 1 0; height: 0; min-height: 130px; margin-top: 8px }
 
 .works { margin-top: clamp(40px, 6vw, 72px) }
 .works-label { color: var(--mute); margin-bottom: 14px }
@@ -403,6 +421,7 @@ a.tile:hover .circle { background: var(--fg); border-color: var(--fg); color: va
 <main>
   <!-- HOME -->
   <section class="panel wrap" id="home" role="tabpanel" aria-labelledby="tab-home">
+    <div class="hero">
     <p class="eyebrow label">Composition — Arrangement — Mixing — Mastering — DSP</p>
     <h1 class="hero-name">
       <span class="solid display">ETH4N</span>
@@ -423,6 +442,7 @@ a.tile:hover .circle { background: var(--fg); border-color: var(--fg); color: va
       </dl>
       <canvas class="scope-canvas" id="spec" role="img" aria-label="55 Hz のノコギリ波を加算合成で鳴らしたときの、倍音（パーシャル）ごとの音量"></canvas>
     </figure>
+    </div>
 
     <section class="works" aria-labelledby="works-h">
       <h2 class="works-label label" id="works-h">Mixing Works</h2>
@@ -519,6 +539,14 @@ a.tile:hover .circle { background: var(--fg); border-color: var(--fg); color: va
 </div>
 
 <script>
+// The sticky bar's height, for the Home hero's one-screen sizing (--mast in the CSS).
+(() => {
+  const bar = document.querySelector('.masthead');
+  const set = () => document.documentElement.style.setProperty('--mast', bar.offsetHeight + 'px');
+  new ResizeObserver(set).observe(bar);
+  set();
+})();
+
 // Tabs: one panel at a time; the panel id is also the #hash, so a link can open a tab.
 (() => {
   const tabs = [...document.querySelectorAll('[role="tab"]')];
