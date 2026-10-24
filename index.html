@@ -5,8 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>ETH4N / Walker dsp</title>
 <meta name="description" content="ETH4N / Ayumu Iida と、プラグインメーカー Walker dsp。">
-<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000000">
-<meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff">
+<meta name="theme-color" content="#ff6b1a">
 <meta property="og:type" content="website">
 <meta property="og:title" content="ETH4N / Walker dsp">
 <meta property="og:description" content="ETH4N / Ayumu Iida と、プラグインメーカー Walker dsp。">
@@ -23,37 +22,34 @@ body { margin: 0 }
 img { max-width: 100% }
 [hidden] { display: none !important }
 
-/* Layout: the same skeleton (a sticky bar of tabs, one panel per tab). The treatment follows
-   Nothing: a tightly tracked grotesk for display, mono labels, hairlines instead of boxes,
-   pill controls, rounded dark tiles, plenty of air, and a single red signal dot. */
+/* Layout: the same skeleton (a sticky bar of tabs, one panel per tab) with Nothing-style
+   type, hairlines and pill controls. Colour: one orange world, deliberately the same in
+   light and dark: black type and black pills on the orange ground; black and dark-grey
+   tiles that carry orange and light grey. */
 :root {
-  --bg: #000000;
-  --fg: #ffffff;
-  --mute: #8c8c8c;
-  --line: #262626;
-  --card: #111111;
-  --card-hi: #1b1b1b;
-  --red: #d71921;
-  --plate: #000000;       /* the spectrum and the product tiles stay dark in both themes */
-  --plate-fg: #ffffff;
-  --plate-dim: #6e6e6e;
+  --orange: #ff6b1a;
+  --ink: #0d0d0d;
+  --gray-900: #1a1a1a;   /* link and playlist tiles */
+  --gray-850: #232323;   /* ...on hover */
+  --gray-700: #3a3a3a;   /* lines on the dark tiles */
+  --gray-500: #7a7a7a;   /* secondary text on the dark tiles */
+  --gray-200: #d9d9d9;   /* text on the dark tiles */
+  --bg: var(--orange);
+  --fg: var(--ink);
+  --mute: #2e2e2e;       /* the lightest grey that still reads on orange at label size */
+  --line: rgba(13, 13, 13, .22);
+  --line-strong: rgba(13, 13, 13, .5);
+  --plate: var(--ink);   /* the spectrum and the product tiles */
+  --plate-fg: var(--gray-200);
+  --plate-dim: var(--gray-500);
   --plate-line: #262626;
   --r-lg: 24px;
   --r-md: 16px;
   --sans: "Geist", "Zen Kaku Gothic New", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, system-ui, sans-serif;
   --mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-  color-scheme: dark;
-}
-@media (prefers-color-scheme: light) {
-  :root:not([data-theme="dark"]) {
-    --bg: #ffffff; --fg: #000000; --mute: #6b6b6b; --line: #e3e3e3; --card: #f2f2f2; --card-hi: #e8e8e8;
-    color-scheme: light;
-  }
-}
-:root[data-theme="light"] {
-  --bg: #ffffff; --fg: #000000; --mute: #6b6b6b; --line: #e3e3e3; --card: #f2f2f2; --card-hi: #e8e8e8;
   color-scheme: light;
 }
+::selection { background: var(--ink); color: var(--orange) }
 
 body {
   background: var(--bg);
@@ -208,7 +204,7 @@ button { font: inherit }
   color: var(--plate-dim);
 }
 .scope-live { display: inline-flex; align-items: center; gap: 8px; color: var(--plate-fg) }
-.scope-live::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--red) }
+.scope-live::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--orange) }
 .scope-read {
   display: flex;
   flex-wrap: wrap;
@@ -247,8 +243,8 @@ button { font: inherit }
   width: clamp(56px, 8vw, 96px);
   aspect-ratio: 1;
   border-radius: var(--r-md);
-  background: var(--card);
-  color: var(--fg);
+  background: var(--ink);
+  color: var(--orange);
 }
 .maker-tile .mark { --h: clamp(36px, 5.2vw, 64px) }
 
@@ -299,9 +295,9 @@ button { font: inherit }
   color: var(--plate-dim);
 }
 .meta span { white-space: nowrap }
-.meta .ver { color: var(--plate-fg) }
-.meta .go { border-color: var(--plate-line); color: var(--plate-fg) }
-.product:hover .go { background: var(--plate-fg); border-color: var(--plate-fg); color: var(--plate) }
+.meta .ver { color: var(--orange) }
+.meta .go { border-color: var(--gray-700); color: var(--plate-fg) }
+.product:hover .go { background: var(--orange); border-color: var(--orange); color: var(--ink) }
 
 /* ---------- history ---------- */
 .filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 32px }
@@ -315,7 +311,7 @@ button { font: inherit }
   border-bottom: 1px solid var(--line);
 }
 .log .date { font: 400 13px/1.6 var(--mono); color: var(--mute); font-variant-numeric: tabular-nums }
-.tag { justify-self: start; padding: 2px 10px; border: 1px solid var(--line); border-radius: 999px; font-size: 10px }
+.tag { justify-self: start; padding: 2px 10px; border: 1px solid var(--line-strong); border-radius: 999px; font-size: 10px }
 .log h3 { font-weight: 500; font-size: 16px; line-height: 1.6 }
 .log h3 span { margin-left: 14px; font-weight: 400; font-size: 14px; color: var(--mute) }
 .is-sample .tag { border-style: dashed; color: var(--mute) }
@@ -345,11 +341,12 @@ button { font: inherit }
   min-height: 190px;
   padding: 24px;
   border-radius: var(--r-lg);
-  background: var(--card);
+  background: var(--gray-900);
+  color: var(--orange);
   text-decoration: none;
   transition: background .2s;
 }
-a.tile:hover { background: var(--card-hi) }
+a.tile:hover { background: var(--gray-850) }
 .tile-name { font-weight: 500; font-size: clamp(26px, 2.6vw, 34px); line-height: 1.1; letter-spacing: -.02em; overflow-wrap: anywhere }
 .tile-meta {
   display: flex;
@@ -358,13 +355,14 @@ a.tile:hover { background: var(--card-hi) }
   justify-content: space-between;
   gap: 10px 12px;
   font: 400 13px/1.5 var(--mono);
-  color: var(--mute);
+  color: var(--gray-500);
 }
-.tile-meta .circle { color: var(--fg) }
-a.tile:hover .circle { background: var(--fg); border-color: var(--fg); color: var(--bg) }
-.mail { min-width: 0; color: var(--fg); overflow-wrap: anywhere; text-decoration: none }
+.tile-meta .circle { border-color: var(--gray-700); color: var(--orange) }
+a.tile:hover .circle { background: var(--orange); border-color: var(--orange); color: var(--ink) }
+.mail { min-width: 0; color: var(--gray-200); overflow-wrap: anywhere; text-decoration: none }
 .mail:hover { text-decoration: underline }
-.copy { color: var(--fg) }
+.copy { border-color: var(--gray-700); color: var(--gray-200) }
+.copy:hover { background: var(--orange); border-color: var(--orange); color: var(--ink) }
 
 /* ---------- footer ---------- */
 .foot { margin-top: clamp(96px, 12vw, 160px); border-top: 1px solid var(--line) }
@@ -641,7 +639,7 @@ a.tile:hover .circle { background: var(--fg); border-color: var(--fg); color: va
   const LOG_SPAN = Math.log(FMAX / FMIN);
   const GRID = [[50, '50'], [100, '100'], [200, '200'], [500, '500'], [1000, '1k'],
                 [2000, '2k'], [5000, '5k'], [10000, '10k']];
-  const C = { grid: '#1f1f1f', dim: '#6e6e6e', bar: '#ffffff', peak: '#d71921' };
+  const C = { grid: '#262626', dim: '#7a7a7a', bar: '#ff6b1a', cap: '#d9d9d9' };
 
   let W = 1, H = 1, dpr = 1, pad = 20, raf = 0, onScreen = true;
   const t0 = performance.now();
@@ -693,8 +691,7 @@ a.tile:hover .circle { background: var(--fg); border-color: var(--fg); color: va
       ctx.lineWidth = (n <= 4 ? 3 : 1) * dpr;
       ctx.beginPath(); ctx.moveTo(x, base); ctx.lineTo(x, y); ctx.stroke();
       if (n <= 24) {
-        // The fundamental's cap is the one red signal.
-        ctx.fillStyle = n === 1 ? C.peak : C.bar;
+        ctx.fillStyle = C.cap;
         ctx.fillRect(x - 2 * dpr, y - dpr, 4 * dpr, 2 * dpr);
       }
     }
