@@ -229,54 +229,41 @@ button { font: inherit }
 }
 
 /* ---------- price ---------- */
-.rates {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: clamp(12px, 1.8vw, 24px);
-}
+/* A ledger on the page itself, hairlines and no tiles. The categories and the
+   terms share one left column, so their text starts on the same line. */
+#price { --price-col: clamp(200px, 24vw, 300px) }
 .rate {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-  min-width: 0;
-  padding: clamp(20px, 2.8vw, 32px);
-  border-radius: var(--r-lg);
-  background: var(--gray-900);
-  color: var(--gray-200);
+  display: grid;
+  grid-template-columns: var(--price-col) minmax(0, 1fr);
+  gap: 14px 24px;
+  align-items: first baseline;
+  padding-block: 24px 28px;
+  border-top: 1px solid var(--line-strong);
 }
-.rate-top { display: flex; justify-content: space-between; gap: 12px; color: var(--gray-500) }
-.rate-tag { color: var(--gray-200) }
-.rate-name { font-weight: 500; font-size: clamp(26px, 2.6vw, 34px); line-height: 1.1; letter-spacing: -.02em; color: var(--orange) }
-.rate-list { border-bottom: 1px solid var(--gray-700) }
+.rate-head { display: grid; grid-template-columns: 3em minmax(0, 1fr); align-items: first baseline; row-gap: 8px }
+.rate-no, .rate-tag { color: var(--mute) }
+.rate-tag { grid-column: 2 }
+.rate-name { font-weight: 500; font-size: clamp(20px, 2vw, 24px); line-height: 1.2; letter-spacing: -.02em }
 .rate-list div {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
   gap: 16px;
-  padding-block: 13px;
-  border-top: 1px solid var(--gray-700);
+  padding-block: 12px;
+  border-bottom: 1px solid var(--line);
 }
+.rate-list div:first-child { padding-top: 0 }
 .rate-list dt { min-width: 0; font-size: 15px; line-height: 1.5 }
-.rate-list dt small { display: block; margin-top: 2px; font: 400 12px/1.5 var(--mono); color: var(--gray-500) }
-.rate-list dd {
-  flex: none;
-  font-weight: 500;
-  font-size: clamp(20px, 2vw, 26px);
-  line-height: 1;
-  letter-spacing: -.02em;
-  color: var(--orange);
-  font-variant-numeric: tabular-nums;
-}
-.rate-list dd.add { font-size: 17px; color: var(--gray-200) }
-.rate-list dd span { margin-left: 2px; font-size: .6em; color: var(--gray-500) }
-.rate-notes { display: grid; gap: 4px; font-size: 13px; line-height: 1.65; color: var(--gray-500) }
-.rate-notes li { padding-left: 1.2em; text-indent: -1.2em }
-.rate-notes li::before { content: "—"; display: inline-block; width: 1.2em; text-indent: 0 }
+.rate-list dt small { display: inline-block; margin-left: 12px; font: 400 12px/1.5 var(--mono); color: var(--mute) }
+.rate-list dd { flex: none; font-weight: 500; font-size: 18px; line-height: 1.2; font-variant-numeric: tabular-nums }
+.rate-list dd.add { font-weight: 400 }
+.rate-list dd span { margin-left: 2px; font-weight: 400; color: var(--mute) }
+.rate-notes { display: grid; gap: 6px; margin-top: 14px; font-size: 13px; line-height: 1.7; color: var(--mute) }
 
-.terms { margin-top: clamp(40px, 6vw, 72px); border-top: 1px solid var(--line) }
+.terms { margin-top: clamp(48px, 7vw, 88px); border-top: 1px solid var(--line) }
 .terms li {
   display: grid;
-  grid-template-columns: 184px minmax(0, 1fr);
+  grid-template-columns: var(--price-col) minmax(0, 1fr);
   gap: 6px 24px;
   align-items: baseline;
   padding-block: 18px;
@@ -470,7 +457,7 @@ a.tile:hover .circle { background: var(--orange); border-color: var(--orange); c
 }
 
 @media (max-width: 900px) {
-  .products, .rates { grid-template-columns: minmax(0, 1fr) }
+  .products { grid-template-columns: minmax(0, 1fr) }
   .tiles { grid-template-columns: minmax(0, 1fr) }
   .tile { min-height: 0 }
 }
@@ -482,7 +469,8 @@ a.tile:hover .circle { background: var(--orange); border-color: var(--orange); c
   /* six tabs: each as wide as its word plus an equal share of the rest (HISTORY is
      wider than a sixth of the bar on a 360px phone) */
   .tabs { flex: 1; min-width: 0; gap: 0; padding: 3px }
-  .terms li { grid-template-columns: minmax(0, 1fr) }
+  .rate, .terms li { grid-template-columns: minmax(0, 1fr) }
+  .rate-list dt small { display: block; margin-left: 0 }
   .tab { flex: 1 1 auto; padding: 8px 2px; font-size: 10px; letter-spacing: .04em }
   .log li { grid-template-columns: auto minmax(0, 1fr) }
   .log li > h3 { grid-column: 1 / -1 }
@@ -550,54 +538,73 @@ a.tile:hover .circle { background: var(--orange); border-color: var(--orange); c
 
     <div class="rates">
       <article class="rate">
-        <p class="rate-top label"><span>01</span><span class="rate-tag">料金・納期 要相談</span></p>
-        <h3 class="rate-name">楽曲制作</h3>
-        <dl class="rate-list">
-          <div><dt>同人楽曲制作<small>リテイク不可</small></dt><dd>¥15,000</dd></div>
-          <div><dt>その他作編曲</dt><dd>¥30,000<span>〜</span></dd></div>
-        </dl>
+        <header class="rate-head">
+          <span class="rate-no label">01</span>
+          <h3 class="rate-name">楽曲制作</h3>
+          <span class="rate-tag label">料金・納期 要相談</span>
+        </header>
+        <div class="rate-body">
+          <dl class="rate-list">
+            <div><dt>同人楽曲制作<small>リテイク不可</small></dt><dd>¥15,000</dd></div>
+            <div><dt>その他作編曲</dt><dd>¥30,000<span>〜</span></dd></div>
+          </dl>
+        </div>
       </article>
 
       <article class="rate">
-        <p class="rate-top label"><span>02</span><span class="rate-tag">料金・納期 要相談</span></p>
-        <h3 class="rate-name">楽曲ミックス</h3>
-        <dl class="rate-list">
-          <div><dt>基本料金</dt><dd>¥33,000</dd></div>
-          <div><dt>50トラック以上<small>10トラックにつき</small></dt><dd class="add">+¥500</dd></div>
-          <div><dt>ボーカルエディット<small>ピッチ補正など、必要な場合</small></dt><dd class="add">+¥5,000</dd></div>
-          <div><dt>Live用ステム書き出し</dt><dd class="add">¥2,000</dd></div>
-        </dl>
-        <ul class="rate-notes">
-          <li>いずれも楽曲の難易度やデータの状態により、追加の料金を頂戴することがございます。</li>
-        </ul>
+        <header class="rate-head">
+          <span class="rate-no label">02</span>
+          <h3 class="rate-name">楽曲ミックス</h3>
+          <span class="rate-tag label">料金・納期 要相談</span>
+        </header>
+        <div class="rate-body">
+          <dl class="rate-list">
+            <div><dt>基本料金</dt><dd>¥33,000</dd></div>
+            <div><dt>50トラック以上<small>10トラックにつき</small></dt><dd class="add">+¥500</dd></div>
+            <div><dt>ボーカルエディット<small>ピッチ補正など、必要な場合</small></dt><dd class="add">+¥5,000</dd></div>
+            <div><dt>Live用ステム書き出し</dt><dd class="add">¥2,000</dd></div>
+          </dl>
+          <ul class="rate-notes">
+            <li>いずれも楽曲の難易度やデータの状態により、追加の料金を頂戴することがございます。</li>
+          </ul>
+        </div>
       </article>
 
       <article class="rate">
-        <p class="rate-top label"><span>03</span></p>
-        <h3 class="rate-name">マスタリング</h3>
-        <dl class="rate-list">
-          <div><dt>ステレオ<small>1曲</small></dt><dd>¥3,000</dd></div>
-          <div><dt>Stem<small>1曲</small></dt><dd>¥5,000</dd></div>
-        </dl>
-        <ul class="rate-notes">
-          <li>数曲のご依頼の場合は別途ご相談ください。</li>
-        </ul>
+        <header class="rate-head">
+          <span class="rate-no label">03</span>
+          <h3 class="rate-name">マスタリング</h3>
+        </header>
+        <div class="rate-body">
+          <dl class="rate-list">
+            <div><dt>ステレオ<small>1曲</small></dt><dd>¥3,000</dd></div>
+            <div><dt>Stem<small>1曲</small></dt><dd>¥5,000</dd></div>
+          </dl>
+          <ul class="rate-notes">
+            <li>数曲のご依頼の場合は別途ご相談ください。</li>
+          </ul>
+        </div>
       </article>
 
       <article class="rate">
-        <p class="rate-top label"><span>04</span><span class="rate-tag">基本料金</span></p>
-        <h3 class="rate-name">歌ってみた</h3>
-        <dl class="rate-list">
-          <div><dt>フルコーラス</dt><dd>¥12,000</dd></div>
-          <div><dt>ワンコーラス</dt><dd>¥8,000</dd></div>
-          <div><dt>Shortサイズ</dt><dd>¥3,000</dd></div>
-        </dl>
-        <ul class="rate-notes">
-          <li>基本納期は2週間です。他のお客様のご依頼状況により変動する場合がございます。</li>
-          <li>いずれも楽曲の難易度やデータの状態により価格が変動いたします。</li>
-          <li>著しくデータの状態が悪い場合はご依頼をお受けしかねることがございます。</li>
-          <li>指定される納期により追加料金を頂く場合がございます。</li>
-        </ul>
+        <header class="rate-head">
+          <span class="rate-no label">04</span>
+          <h3 class="rate-name">歌ってみた</h3>
+          <span class="rate-tag label">基本料金</span>
+        </header>
+        <div class="rate-body">
+          <dl class="rate-list">
+            <div><dt>フルコーラス</dt><dd>¥12,000</dd></div>
+            <div><dt>ワンコーラス</dt><dd>¥8,000</dd></div>
+            <div><dt>Shortサイズ</dt><dd>¥3,000</dd></div>
+          </dl>
+          <ul class="rate-notes">
+            <li>基本納期は2週間です。他のお客様のご依頼状況により変動する場合がございます。</li>
+            <li>いずれも楽曲の難易度やデータの状態により価格が変動いたします。</li>
+            <li>著しくデータの状態が悪い場合はご依頼をお受けしかねることがございます。</li>
+            <li>指定される納期により追加料金を頂く場合がございます。</li>
+          </ul>
+        </div>
       </article>
     </div>
 
