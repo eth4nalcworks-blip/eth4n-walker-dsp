@@ -22,6 +22,8 @@ python3 -m http.server 8000
 
 - `index.html` … ページ本体。CSS と JavaScript もこの中にある
 - `img/` … ロゴ、製品の画面写真、ファビコン（`favicon.png`）、ホーム画面用アイコン（`apple-touch-icon.png`）
+- `sow/` … SOW（SIREN Lite）。SOW タブがタブを開いたときに `sow/?embed` を読み込む。単独でも
+  `sow/` で開ける。SOW プロジェクトの `tools/deploy_site.sh` が書き出すもので、ここでは直接編集しない
 
 ## メモ
 

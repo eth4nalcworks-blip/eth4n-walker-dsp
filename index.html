@@ -299,6 +299,39 @@ button { font: inherit }
 .meta .go { border-color: var(--gray-700); color: var(--plate-fg) }
 .product:hover .go { background: var(--orange); border-color: var(--orange); color: var(--ink) }
 
+/* ---------- sow ---------- */
+.sow-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: clamp(32px, 5vw, 56px);
+}
+.sow-head .panel-title { margin-bottom: 0; min-width: 0 }
+.sow-sub { display: block; margin-top: 14px; color: var(--mute) }
+.sow-open { flex: none; color: var(--fg); border-color: var(--line-strong); text-decoration: none }
+.sow-open:hover { background: var(--fg); border-color: var(--fg); color: var(--bg) }
+.sow-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 152px;
+  padding: 24px;
+  border-radius: var(--r-lg);
+  background: var(--gray-900);
+  color: var(--orange);
+  text-decoration: none;
+  transition: background .2s;
+}
+.sow-card:hover { background: var(--gray-850) }
+.sow-card-name { font-weight: 500; font-size: clamp(26px, 3.2vw, 40px); line-height: 1.05; letter-spacing: -.03em }
+.sow-card .circle { width: 48px; height: 48px; border-color: var(--gray-700); color: var(--orange) }
+.sow-card:hover .circle { background: var(--orange); border-color: var(--orange); color: var(--ink) }
+/* the hosted page embeds SOW itself (export_site.py): a dark tile holding the frame */
+.sow-frame { padding: clamp(8px, 1.4vw, 16px); border: 1px solid var(--plate-line); border-radius: var(--r-lg); background: var(--plate) }
+.sow-app { display: block; width: 100%; height: 46vw; border: 0; background: var(--plate); color-scheme: dark }
+
 /* ---------- history ---------- */
 .filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 32px }
 .log { border-top: 1px solid var(--line) }
@@ -374,7 +407,7 @@ a.tile:hover .circle { background: var(--orange); border-color: var(--orange); c
   @keyframes blink { 50% { opacity: .2 } }
 }
 @media (prefers-reduced-motion: reduce) {
-  .pill, .circle, .product, .plate-shot, .tile { transition: none }
+  .pill, .circle, .product, .plate-shot, .tile, .sow-card { transition: none }
   .product:hover .plate-shot { transform: none }
 }
 
@@ -388,7 +421,7 @@ a.tile:hover .circle { background: var(--orange); border-color: var(--orange); c
   .brand { width: 32px; height: 32px }
   .brand .mark { --h: 26px }
   .tab-more { display: none }
-  .tabs { flex: 1; min-width: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); padding: 3px }
+  .tabs { flex: 1; min-width: 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); padding: 3px }
   .tab { padding: 8px 0; font-size: 10px; letter-spacing: .04em }
   .log li { grid-template-columns: auto minmax(0, 1fr) }
   .log li > h3 { grid-column: 1 / -1 }
@@ -408,6 +441,7 @@ a.tile:hover .circle { background: var(--orange); border-color: var(--orange); c
     <div class="tabs" role="tablist" aria-label="ページ">
       <button type="button" class="tab pill label" role="tab" id="tab-home" aria-controls="home" aria-selected="true">Home</button>
       <button type="button" class="tab pill label" role="tab" id="tab-walker" aria-controls="walker" aria-selected="false" tabindex="-1">Walker<span class="tab-more"> dsp</span></button>
+      <button type="button" class="tab pill label" role="tab" id="tab-sow" aria-controls="sow" aria-selected="false" tabindex="-1">SOW</button>
       <button type="button" class="tab pill label" role="tab" id="tab-history" aria-controls="history" aria-selected="false" tabindex="-1">History</button>
       <button type="button" class="tab pill label" role="tab" id="tab-links" aria-controls="links" aria-selected="false" tabindex="-1">Links</button>
     </div>
@@ -471,6 +505,15 @@ a.tile:hover .circle { background: var(--orange); border-color: var(--orange); c
         <p class="meta label"><span class="ver">v0.6.7</span><span>VST3</span><span>AU</span><span class="go circle" aria-hidden="true">↗</span></p>
       </a>
     </div>
+  </section>
+
+  <!-- SOW -->
+  <section class="panel wrap" id="sow" role="tabpanel" aria-labelledby="tab-sow" hidden>
+    <div class="sow-head">
+      <h2 class="panel-title display">SOW<span class="sow-sub label">SIREN Lite</span></h2>
+      <a class="sow-open pill label" href="sow/" target="_blank" rel="noopener">Full screen ↗</a>
+    </div>
+    <div class="sow-frame"><iframe class="sow-app" data-src="sow/?embed" title="SOW — SIREN Lite" allow="autoplay; midi; fullscreen"></iframe></div>
   </section>
 
   <!-- HISTORY -->
@@ -577,6 +620,27 @@ a.tile:hover .circle { background: var(--orange); border-color: var(--orange); c
   }));
   window.addEventListener('hashchange', () => select(location.hash.slice(1)));
   select(location.hash.slice(1), { scroll: false });
+})();
+
+// SOW: the SIREN page loads the first time its tab is shown, sizes the frame to
+// its own height, and is told to let go of any held notes when the tab is left.
+(() => {
+  const panel = document.getElementById('sow');
+  const frame = panel && panel.querySelector('.sow-app');
+  if (!frame) return;
+  const guess = () => { frame.style.height = Math.round(frame.clientWidth * 330 / 1000 + 132) + 'px'; };
+  window.addEventListener('message', (e) => {
+    if (e.source === frame.contentWindow && e.data && e.data.sow === 'height') frame.style.height = e.data.h + 'px';
+  });
+  const sync = () => {
+    if (panel.hidden) {
+      if (frame.src) frame.contentWindow.postMessage({ sow: 'hide' }, '*');
+      return;
+    }
+    if (!frame.src) { frame.src = frame.dataset.src; guess(); }
+  };
+  new MutationObserver(sync).observe(panel, { attributes: true, attributeFilter: ['hidden'] });
+  sync();
 })();
 
 // History: filter by name
