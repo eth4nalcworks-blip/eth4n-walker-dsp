@@ -232,51 +232,6 @@ button { font: inherit }
   color-scheme: normal;   /* match the embed, or the browser paints an opaque backdrop behind it */
 }
 
-/* ---------- price ---------- */
-/* A ledger on the page itself, hairlines and no tiles. The categories and the
-   terms share one left column, so their text starts on the same line. */
-#price { --price-col: clamp(200px, 24vw, 300px) }
-.rate {
-  display: grid;
-  grid-template-columns: var(--price-col) minmax(0, 1fr);
-  gap: 14px 24px;
-  align-items: first baseline;
-  padding-block: 24px 28px;
-  border-top: 1px solid var(--line-strong);
-}
-.rate-head { display: grid; grid-template-columns: 3em minmax(0, 1fr); align-items: first baseline; row-gap: 8px }
-.rate-no, .rate-tag { color: var(--mute) }
-.rate-tag { grid-column: 2 }
-.rate-name { font-weight: 500; font-size: clamp(20px, 2vw, 24px); line-height: 1.2; letter-spacing: -.02em }
-.rate-list div {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 16px;
-  padding-block: 12px;
-  border-bottom: 1px solid var(--line);
-}
-.rate-list div:first-child { padding-top: 0 }
-.rate-list dt { min-width: 0; font-size: 15px; line-height: 1.5 }
-.rate-list dt small { display: inline-block; margin-left: 12px; font: 400 12px/1.5 var(--mono); color: var(--mute) }
-.rate-list dd { flex: none; font-weight: 500; font-size: 18px; line-height: 1.2; font-variant-numeric: tabular-nums }
-.rate-list dd.add { font-weight: 400 }
-.rate-list dd span { margin-left: 2px; font-weight: 400; color: var(--mute) }
-.rate-notes { display: grid; gap: 6px; margin-top: 14px; font-size: 13px; line-height: 1.7; color: var(--mute) }
-
-.terms { margin-top: clamp(48px, 7vw, 88px); border-top: 1px solid var(--line) }
-.terms li {
-  display: grid;
-  grid-template-columns: var(--price-col) minmax(0, 1fr);
-  gap: 6px 24px;
-  align-items: baseline;
-  padding-block: 18px;
-  border-bottom: 1px solid var(--line);
-}
-.terms .label { color: var(--mute) }
-.terms p { font-size: 15px; line-height: 1.7 }
-.terms b { margin-inline: .25em; font-weight: 500; white-space: nowrap }
-
 /* ---------- walker dsp ---------- */
 .walker-head {
   display: flex;
@@ -347,6 +302,51 @@ button { font: inherit }
 .meta .ver { color: var(--orange) }
 .meta .go { border-color: var(--gray-700); color: var(--plate-fg) }
 .product:hover .go { background: var(--orange); border-color: var(--orange); color: var(--ink) }
+
+/* ---------- price ---------- */
+/* A ledger on the page itself, hairlines and no tiles. The categories and the
+   terms share one left column, so their text starts on the same line. */
+#price { --price-col: clamp(200px, 24vw, 300px) }
+.rate {
+  display: grid;
+  grid-template-columns: var(--price-col) minmax(0, 1fr);
+  gap: 14px 24px;
+  align-items: first baseline;
+  padding-block: 24px 28px;
+  border-top: 1px solid var(--line-strong);
+}
+.rate-head { display: grid; grid-template-columns: 3em minmax(0, 1fr); align-items: first baseline; row-gap: 8px }
+.rate-no, .rate-tag { color: var(--mute) }
+.rate-tag { grid-column: 2 }
+.rate-name { font-weight: 500; font-size: clamp(20px, 2vw, 24px); line-height: 1.2; letter-spacing: -.02em }
+.rate-list div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  padding-block: 12px;
+  border-bottom: 1px solid var(--line);
+}
+.rate-list div:first-child { padding-top: 0 }
+.rate-list dt { min-width: 0; font-size: 15px; line-height: 1.5 }
+.rate-list dt small { display: inline-block; margin-left: 12px; font: 400 12px/1.5 var(--mono); color: var(--mute) }
+.rate-list dd { flex: none; font-weight: 500; font-size: 18px; line-height: 1.2; font-variant-numeric: tabular-nums }
+.rate-list dd.add { font-weight: 400 }
+.rate-list dd span { margin-left: 2px; font-weight: 400; color: var(--mute) }
+.rate-notes { display: grid; gap: 6px; margin-top: 14px; font-size: 13px; line-height: 1.7; color: var(--mute) }
+
+.terms { margin-top: clamp(48px, 7vw, 88px); border-top: 1px solid var(--line) }
+.terms li {
+  display: grid;
+  grid-template-columns: var(--price-col) minmax(0, 1fr);
+  gap: 6px 24px;
+  align-items: baseline;
+  padding-block: 18px;
+  border-bottom: 1px solid var(--line);
+}
+.terms .label { color: var(--mute) }
+.terms p { font-size: 15px; line-height: 1.7 }
+.terms b { margin-inline: .25em; font-weight: 500; white-space: nowrap }
 
 /* ---------- sow ---------- */
 .sow-head, .price-head {
@@ -493,8 +493,8 @@ a.tile:hover .circle { background: var(--orange); border-color: var(--orange); c
     </a>
     <div class="tabs" role="tablist" aria-label="ページ">
       <button type="button" class="tab pill label" role="tab" id="tab-home" aria-controls="home" aria-selected="true">Home</button>
-      <button type="button" class="tab pill label" role="tab" id="tab-price" aria-controls="price" aria-selected="false" tabindex="-1">Price</button>
       <button type="button" class="tab pill label" role="tab" id="tab-walker" aria-controls="walker" aria-selected="false" tabindex="-1">Walker<span class="tab-more"> dsp</span></button>
+      <button type="button" class="tab pill label" role="tab" id="tab-price" aria-controls="price" aria-selected="false" tabindex="-1">Price</button>
       <button type="button" class="tab pill label" role="tab" id="tab-sow" aria-controls="sow" aria-selected="false" tabindex="-1">SOW</button>
       <button type="button" class="tab pill label" role="tab" id="tab-history" aria-controls="history" aria-selected="false" tabindex="-1">History</button>
       <button type="button" class="tab pill label" role="tab" id="tab-links" aria-controls="links" aria-selected="false" tabindex="-1">Links</button>
@@ -531,6 +531,34 @@ a.tile:hover .circle { background: var(--orange); border-color: var(--orange); c
       <h2 class="works-label label" id="works-h">Mixing Works</h2>
       <iframe class="player" src="https://open.spotify.com/embed/playlist/7AB48rMOlIJWbZpCy5cCyp?utm_source=generator&amp;theme=0" allowfullscreen allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy" title="Mixing Works（Spotify）"></iframe>
     </section>
+  </section>
+
+  <!-- WALKER DSP -->
+  <section class="panel wrap" id="walker" role="tabpanel" aria-labelledby="tab-walker" hidden>
+    <div class="walker-head">
+      <div class="maker-tile"><span class="mark" role="img" aria-label="Walker dsp のロゴ"></span></div>
+      <h2 class="panel-title display">Walker dsp</h2>
+    </div>
+
+    <div class="products">
+      <a class="product" id="siren" href="https://eth4n-alc.booth.pm/items/8639530" target="_blank" rel="noopener" aria-label="SIREN（BOOTH の商品ページ）">
+        <h3 class="vh">SIREN</h3>
+        <div class="plate">
+          <img class="plate-logo" src="img/siren-logo.webp" alt="SIREN" width="1000" height="245">
+          <img class="plate-shot" src="img/siren-ui.webp" alt="SIREN の画面" width="1600" height="1013" loading="lazy">
+        </div>
+        <p class="meta label"><span class="ver">v0.16.0 Beta</span><span>VST3</span><span>AU</span><span class="go circle" aria-hidden="true">↗</span></p>
+      </a>
+
+      <a class="product" id="aquamarine" href="https://eth4n-alc.booth.pm/items/8761884" target="_blank" rel="noopener" aria-label="AQUAMARINE（BOOTH の商品ページ）">
+        <h3 class="vh">AQUAMARINE</h3>
+        <div class="plate">
+          <img class="plate-logo lift" src="img/aquamarine-logo.webp" alt="AQUAMARINE" width="1200" height="166">
+          <img class="plate-shot" src="img/aquamarine-ui.webp" alt="AQUAMARINE の画面" width="1520" height="1244" loading="lazy">
+        </div>
+        <p class="meta label"><span class="ver">v0.6.7</span><span>VST3</span><span>AU</span><span class="go circle" aria-hidden="true">↗</span></p>
+      </a>
+    </div>
   </section>
 
   <!-- PRICE (lit.link/ayumuiida の料金表) -->
@@ -620,34 +648,6 @@ a.tile:hover .circle { background: var(--orange); border-color: var(--orange); c
       <li><span class="label">データの保存期間</span><p>こちら側での保存期間は納品日を1日目とし、1週間です。それ以降はデータをお求め頂いてもお渡しすることはできません。</p></li>
       <li><span class="label">作業環境</span><p>基本的に Ableton Live 11 Suite で作業いたします。Pro Tools をご指定される場合は事前にご相談ください。</p></li>
     </ul>
-  </section>
-
-  <!-- WALKER DSP -->
-  <section class="panel wrap" id="walker" role="tabpanel" aria-labelledby="tab-walker" hidden>
-    <div class="walker-head">
-      <div class="maker-tile"><span class="mark" role="img" aria-label="Walker dsp のロゴ"></span></div>
-      <h2 class="panel-title display">Walker dsp</h2>
-    </div>
-
-    <div class="products">
-      <a class="product" id="siren" href="https://eth4n-alc.booth.pm/items/8639530" target="_blank" rel="noopener" aria-label="SIREN（BOOTH の商品ページ）">
-        <h3 class="vh">SIREN</h3>
-        <div class="plate">
-          <img class="plate-logo" src="img/siren-logo.webp" alt="SIREN" width="1000" height="245">
-          <img class="plate-shot" src="img/siren-ui.webp" alt="SIREN の画面" width="1600" height="1013" loading="lazy">
-        </div>
-        <p class="meta label"><span class="ver">v0.16.0 Beta</span><span>VST3</span><span>AU</span><span class="go circle" aria-hidden="true">↗</span></p>
-      </a>
-
-      <a class="product" id="aquamarine" href="https://eth4n-alc.booth.pm/items/8761884" target="_blank" rel="noopener" aria-label="AQUAMARINE（BOOTH の商品ページ）">
-        <h3 class="vh">AQUAMARINE</h3>
-        <div class="plate">
-          <img class="plate-logo lift" src="img/aquamarine-logo.webp" alt="AQUAMARINE" width="1200" height="166">
-          <img class="plate-shot" src="img/aquamarine-ui.webp" alt="AQUAMARINE の画面" width="1520" height="1244" loading="lazy">
-        </div>
-        <p class="meta label"><span class="ver">v0.6.7</span><span>VST3</span><span>AU</span><span class="go circle" aria-hidden="true">↗</span></p>
-      </a>
-    </div>
   </section>
 
   <!-- SOW -->
