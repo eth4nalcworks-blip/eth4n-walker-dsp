@@ -228,6 +228,64 @@ button { font: inherit }
   color-scheme: normal;   /* match the embed, or the browser paints an opaque backdrop behind it */
 }
 
+/* ---------- price ---------- */
+.rates {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(12px, 1.8vw, 24px);
+}
+.rate {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-width: 0;
+  padding: clamp(20px, 2.8vw, 32px);
+  border-radius: var(--r-lg);
+  background: var(--gray-900);
+  color: var(--gray-200);
+}
+.rate-top { display: flex; justify-content: space-between; gap: 12px; color: var(--gray-500) }
+.rate-tag { color: var(--gray-200) }
+.rate-name { font-weight: 500; font-size: clamp(26px, 2.6vw, 34px); line-height: 1.1; letter-spacing: -.02em; color: var(--orange) }
+.rate-list { border-bottom: 1px solid var(--gray-700) }
+.rate-list div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  padding-block: 13px;
+  border-top: 1px solid var(--gray-700);
+}
+.rate-list dt { min-width: 0; font-size: 15px; line-height: 1.5 }
+.rate-list dt small { display: block; margin-top: 2px; font: 400 12px/1.5 var(--mono); color: var(--gray-500) }
+.rate-list dd {
+  flex: none;
+  font-weight: 500;
+  font-size: clamp(20px, 2vw, 26px);
+  line-height: 1;
+  letter-spacing: -.02em;
+  color: var(--orange);
+  font-variant-numeric: tabular-nums;
+}
+.rate-list dd.add { font-size: 17px; color: var(--gray-200) }
+.rate-list dd span { margin-left: 2px; font-size: .6em; color: var(--gray-500) }
+.rate-notes { display: grid; gap: 4px; font-size: 13px; line-height: 1.65; color: var(--gray-500) }
+.rate-notes li { padding-left: 1.2em; text-indent: -1.2em }
+.rate-notes li::before { content: "—"; display: inline-block; width: 1.2em; text-indent: 0 }
+
+.terms { margin-top: clamp(40px, 6vw, 72px); border-top: 1px solid var(--line) }
+.terms li {
+  display: grid;
+  grid-template-columns: 184px minmax(0, 1fr);
+  gap: 6px 24px;
+  align-items: baseline;
+  padding-block: 18px;
+  border-bottom: 1px solid var(--line);
+}
+.terms .label { color: var(--mute) }
+.terms p { font-size: 15px; line-height: 1.7 }
+.terms b { margin-inline: .25em; font-weight: 500; white-space: nowrap }
+
 /* ---------- walker dsp ---------- */
 .walker-head {
   display: flex;
@@ -300,17 +358,17 @@ button { font: inherit }
 .product:hover .go { background: var(--orange); border-color: var(--orange); color: var(--ink) }
 
 /* ---------- sow ---------- */
-.sow-head {
+.sow-head, .price-head {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
   gap: 16px;
   margin-bottom: clamp(32px, 5vw, 56px);
 }
-.sow-head .panel-title { margin-bottom: 0; min-width: 0 }
+.sow-head .panel-title, .price-head .panel-title { margin-bottom: 0; min-width: 0 }
 .sow-sub { display: block; margin-top: 14px; color: var(--mute) }
-.sow-open { flex: none; color: var(--fg); border-color: var(--line-strong); text-decoration: none }
-.sow-open:hover { background: var(--fg); border-color: var(--fg); color: var(--bg) }
+.sow-open, .ask { flex: none; color: var(--fg); border-color: var(--line-strong); text-decoration: none }
+.sow-open:hover, .ask:hover { background: var(--fg); border-color: var(--fg); color: var(--bg) }
 .sow-card {
   display: flex;
   align-items: center;
@@ -412,7 +470,7 @@ a.tile:hover .circle { background: var(--orange); border-color: var(--orange); c
 }
 
 @media (max-width: 900px) {
-  .products { grid-template-columns: minmax(0, 1fr) }
+  .products, .rates { grid-template-columns: minmax(0, 1fr) }
   .tiles { grid-template-columns: minmax(0, 1fr) }
   .tile { min-height: 0 }
 }
@@ -421,8 +479,11 @@ a.tile:hover .circle { background: var(--orange); border-color: var(--orange); c
   .brand { width: 32px; height: 32px }
   .brand .mark { --h: 26px }
   .tab-more { display: none }
-  .tabs { flex: 1; min-width: 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); padding: 3px }
-  .tab { padding: 8px 0; font-size: 10px; letter-spacing: .04em }
+  /* six tabs: each as wide as its word plus an equal share of the rest (HISTORY is
+     wider than a sixth of the bar on a 360px phone) */
+  .tabs { flex: 1; min-width: 0; gap: 0; padding: 3px }
+  .terms li { grid-template-columns: minmax(0, 1fr) }
+  .tab { flex: 1 1 auto; padding: 8px 2px; font-size: 10px; letter-spacing: .04em }
   .log li { grid-template-columns: auto minmax(0, 1fr) }
   .log li > h3 { grid-column: 1 / -1 }
   .log h3 span { display: block; margin-left: 0 }
@@ -440,6 +501,7 @@ a.tile:hover .circle { background: var(--orange); border-color: var(--orange); c
     </a>
     <div class="tabs" role="tablist" aria-label="ページ">
       <button type="button" class="tab pill label" role="tab" id="tab-home" aria-controls="home" aria-selected="true">Home</button>
+      <button type="button" class="tab pill label" role="tab" id="tab-price" aria-controls="price" aria-selected="false" tabindex="-1">Price</button>
       <button type="button" class="tab pill label" role="tab" id="tab-walker" aria-controls="walker" aria-selected="false" tabindex="-1">Walker<span class="tab-more"> dsp</span></button>
       <button type="button" class="tab pill label" role="tab" id="tab-sow" aria-controls="sow" aria-selected="false" tabindex="-1">SOW</button>
       <button type="button" class="tab pill label" role="tab" id="tab-history" aria-controls="history" aria-selected="false" tabindex="-1">History</button>
@@ -477,6 +539,76 @@ a.tile:hover .circle { background: var(--orange); border-color: var(--orange); c
       <h2 class="works-label label" id="works-h">Mixing Works</h2>
       <iframe class="player" src="https://open.spotify.com/embed/playlist/7AB48rMOlIJWbZpCy5cCyp?utm_source=generator&amp;theme=0" allowfullscreen allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy" title="Mixing Works（Spotify）"></iframe>
     </section>
+  </section>
+
+  <!-- PRICE (lit.link/ayumuiida の料金表) -->
+  <section class="panel wrap" id="price" role="tabpanel" aria-labelledby="tab-price" hidden>
+    <div class="price-head">
+      <h2 class="panel-title display">Price</h2>
+      <a class="ask pill label" href="#links" data-tab="links">Contact →</a>
+    </div>
+
+    <div class="rates">
+      <article class="rate">
+        <p class="rate-top label"><span>01</span><span class="rate-tag">料金・納期 要相談</span></p>
+        <h3 class="rate-name">楽曲制作</h3>
+        <dl class="rate-list">
+          <div><dt>同人楽曲制作<small>リテイク不可</small></dt><dd>¥15,000</dd></div>
+          <div><dt>その他作編曲</dt><dd>¥30,000<span>〜</span></dd></div>
+        </dl>
+      </article>
+
+      <article class="rate">
+        <p class="rate-top label"><span>02</span><span class="rate-tag">料金・納期 要相談</span></p>
+        <h3 class="rate-name">楽曲ミックス</h3>
+        <dl class="rate-list">
+          <div><dt>基本料金</dt><dd>¥33,000</dd></div>
+          <div><dt>50トラック以上<small>10トラックにつき</small></dt><dd class="add">+¥500</dd></div>
+          <div><dt>ボーカルエディット<small>ピッチ補正など、必要な場合</small></dt><dd class="add">+¥5,000</dd></div>
+          <div><dt>Live用ステム書き出し</dt><dd class="add">¥2,000</dd></div>
+        </dl>
+        <ul class="rate-notes">
+          <li>いずれも楽曲の難易度やデータの状態により、追加の料金を頂戴することがございます。</li>
+        </ul>
+      </article>
+
+      <article class="rate">
+        <p class="rate-top label"><span>03</span></p>
+        <h3 class="rate-name">マスタリング</h3>
+        <dl class="rate-list">
+          <div><dt>ステレオ<small>1曲</small></dt><dd>¥3,000</dd></div>
+          <div><dt>Stem<small>1曲</small></dt><dd>¥5,000</dd></div>
+        </dl>
+        <ul class="rate-notes">
+          <li>数曲のご依頼の場合は別途ご相談ください。</li>
+        </ul>
+      </article>
+
+      <article class="rate">
+        <p class="rate-top label"><span>04</span><span class="rate-tag">基本料金</span></p>
+        <h3 class="rate-name">歌ってみた</h3>
+        <dl class="rate-list">
+          <div><dt>フルコーラス</dt><dd>¥12,000</dd></div>
+          <div><dt>ワンコーラス</dt><dd>¥8,000</dd></div>
+          <div><dt>Shortサイズ</dt><dd>¥3,000</dd></div>
+        </dl>
+        <ul class="rate-notes">
+          <li>基本納期は2週間です。他のお客様のご依頼状況により変動する場合がございます。</li>
+          <li>いずれも楽曲の難易度やデータの状態により価格が変動いたします。</li>
+          <li>著しくデータの状態が悪い場合はご依頼をお受けしかねることがございます。</li>
+          <li>指定される納期により追加料金を頂く場合がございます。</li>
+        </ul>
+      </article>
+    </div>
+
+    <ul class="terms">
+      <li><span class="label">実績開示不可</span><p>実績開示不可（クレジット放棄）にする場合、どのご依頼に関しても1件につき<b>+¥10,000</b>頂きます。予めお教えください。</p></li>
+      <li><span class="label">お支払い</span><p>銀行振込のみでお受けしております。</p></li>
+      <li><span class="label">リテイク</span><p>ミックス、マスタリングのリテイクは3回まで無料で対応いたします。それ以降は<b>1回 ¥1,000</b>頂戴いたします。</p></li>
+      <li><span class="label">データの差し替え</span><p>作業開始後にデータを差し替える場合は、作業進行度、差し替える箇所の長さにより追加料金が発生いたします。</p></li>
+      <li><span class="label">データの保存期間</span><p>こちら側での保存期間は納品日を1日目とし、1週間です。それ以降はデータをお求め頂いてもお渡しすることはできません。</p></li>
+      <li><span class="label">作業環境</span><p>基本的に Ableton Live 11 Suite で作業いたします。Pro Tools をご指定される場合は事前にご相談ください。</p></li>
+    </ul>
   </section>
 
   <!-- WALKER DSP -->
