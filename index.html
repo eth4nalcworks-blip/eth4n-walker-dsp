@@ -221,17 +221,6 @@ button { font: inherit }
 /* Sized by the flexbox, never by its own pixel buffer (flex-basis 0, explicit minimum). */
 .scope-canvas { display: block; width: 100%; flex: 1 1 0; height: 0; min-height: 130px; margin-top: 8px }
 
-.works { margin-top: clamp(40px, 6vw, 72px) }
-.works-label { color: var(--mute); margin-bottom: 14px }
-.player {
-  display: block;
-  width: 100%;
-  height: 152px;
-  border: 0;
-  border-radius: 12px;
-  color-scheme: normal;   /* match the embed, or the browser paints an opaque backdrop behind it */
-}
-
 /* ---------- walker dsp ---------- */
 .walker-head {
   display: flex;
@@ -381,7 +370,19 @@ button { font: inherit }
 .sow-frame { padding: clamp(8px, 1.4vw, 16px); border: 1px solid var(--plate-line); border-radius: var(--r-lg); background: var(--plate) }
 .sow-app { display: block; width: 100%; height: 46vw; border: 0; background: var(--plate); color-scheme: dark }
 
-/* ---------- history ---------- */
+/* ---------- works ---------- */
+/* the Spotify playlist, right under the title */
+.mixes { margin-bottom: clamp(40px, 6vw, 72px) }
+.mixes-label { color: var(--mute); margin-bottom: 14px }
+.player {
+  display: block;
+  width: 100%;
+  height: 152px;
+  border: 0;
+  border-radius: 12px;
+  color-scheme: normal;   /* match the embed, or the browser paints an opaque backdrop behind it */
+}
+
 .filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 32px }
 .log { border-top: 1px solid var(--line) }
 .log li {
@@ -470,8 +471,8 @@ a.tile:hover .circle { background: var(--orange); border-color: var(--orange); c
   .brand { width: 32px; height: 32px }
   .brand .mark { --h: 26px }
   .tab-more { display: none }
-  /* six tabs: each as wide as its word plus an equal share of the rest (HISTORY is
-     wider than a sixth of the bar on a 360px phone) */
+  /* six tabs: each as wide as its word plus an equal share of the rest (a sixth
+     of the bar each left the longest word tight on a 360px phone) */
   .tabs { flex: 1; min-width: 0; gap: 0; padding: 3px }
   .rate, .terms li { grid-template-columns: minmax(0, 1fr) }
   .rate-list dt small { display: block; margin-left: 0 }
@@ -496,7 +497,7 @@ a.tile:hover .circle { background: var(--orange); border-color: var(--orange); c
       <button type="button" class="tab pill label" role="tab" id="tab-walker" aria-controls="walker" aria-selected="false" tabindex="-1">Walker<span class="tab-more"> dsp</span></button>
       <button type="button" class="tab pill label" role="tab" id="tab-price" aria-controls="price" aria-selected="false" tabindex="-1">Price</button>
       <button type="button" class="tab pill label" role="tab" id="tab-sow" aria-controls="sow" aria-selected="false" tabindex="-1">SOW</button>
-      <button type="button" class="tab pill label" role="tab" id="tab-history" aria-controls="history" aria-selected="false" tabindex="-1">History</button>
+      <button type="button" class="tab pill label" role="tab" id="tab-works" aria-controls="works" aria-selected="false" tabindex="-1">Works</button>
       <button type="button" class="tab pill label" role="tab" id="tab-links" aria-controls="links" aria-selected="false" tabindex="-1">Links</button>
     </div>
   </div>
@@ -526,11 +527,6 @@ a.tile:hover .circle { background: var(--orange); border-color: var(--orange); c
       <canvas class="scope-canvas" id="spec" role="img" aria-label="55 Hz のノコギリ波を加算合成で鳴らしたときの、倍音（パーシャル）ごとの音量"></canvas>
     </figure>
     </div>
-
-    <section class="works" aria-labelledby="works-h">
-      <h2 class="works-label label" id="works-h">Mixing Works</h2>
-      <iframe class="player" src="https://open.spotify.com/embed/playlist/7AB48rMOlIJWbZpCy5cCyp?utm_source=generator&amp;theme=0" allowfullscreen allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy" title="Mixing Works（Spotify）"></iframe>
-    </section>
   </section>
 
   <!-- WALKER DSP -->
@@ -659,9 +655,15 @@ a.tile:hover .circle { background: var(--orange); border-color: var(--orange); c
     <div class="sow-frame"><iframe class="sow-app" data-src="sow/?embed" title="SOW — SIREN Lite" allow="autoplay; midi; fullscreen"></iframe></div>
   </section>
 
-  <!-- HISTORY -->
-  <section class="panel wrap" id="history" role="tabpanel" aria-labelledby="tab-history" hidden>
-    <h2 class="panel-title display">History</h2>
+  <!-- WORKS -->
+  <section class="panel wrap" id="works" role="tabpanel" aria-labelledby="tab-works" hidden>
+    <h2 class="panel-title display">Works</h2>
+
+    <section class="mixes" aria-labelledby="mixes-h">
+      <h3 class="mixes-label label" id="mixes-h">Mixing Works</h3>
+      <iframe class="player" src="https://open.spotify.com/embed/playlist/7AB48rMOlIJWbZpCy5cCyp?utm_source=generator&amp;theme=0" allowfullscreen allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy" title="Mixing Works（Spotify）"></iframe>
+    </section>
+
     <div class="filters" role="group" aria-label="名義で絞り込む">
       <button type="button" class="f pill label" id="f-all" data-f="all" aria-pressed="true">All</button>
       <button type="button" class="f pill label" id="f-eth4n" data-f="eth4n" aria-pressed="false">ETH4N</button>
@@ -734,6 +736,7 @@ a.tile:hover .circle { background: var(--orange); border-color: var(--orange); c
   const ids = tabs.map(t => t.getAttribute('aria-controls'));
 
   function select(id, { focus = false, scroll = true } = {}) {
+    if (id === 'history') id = 'works';   // the tab was called History before
     if (!ids.includes(id)) return;
     tabs.forEach(t => {
       const on = t.getAttribute('aria-controls') === id;
@@ -799,7 +802,7 @@ a.tile:hover .circle { background: var(--orange); border-color: var(--orange); c
   window.addEventListener('blur', () => { if (frame.src) frame.contentWindow.postMessage({ sow: 'keys-lost' }, '*'); });
 })();
 
-// History: filter by name
+// Works: filter by name
 (() => {
   const log = document.getElementById('log');
   const empty = document.getElementById('log-empty');
