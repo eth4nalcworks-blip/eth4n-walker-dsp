@@ -156,7 +156,11 @@ button { font: inherit }
 .tab { border-color: transparent }
 .tab:hover { border-color: transparent }
 
-.panel { --panel-top: clamp(16px, 2.2vw, 28px); padding-top: var(--panel-top) }
+/* The #hash is a panel's id, so opening the page with one makes the browser jump
+   to that panel, which starts under the sticky bar: the page would load scrolled
+   down by the bar's height. The margin pushes that jump above the page's top,
+   which leaves it at 0. */
+.panel { --panel-top: clamp(16px, 2.2vw, 28px); padding-top: var(--panel-top); scroll-margin-top: 100vh }
 .panel-title { font-size: clamp(44px, 8vw, 104px); margin-bottom: clamp(32px, 5vw, 56px) }
 
 /* ---------- home ---------- */
