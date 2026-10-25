@@ -206,21 +206,32 @@ export class Keyboard {
     };
     window.addEventListener('keydown', (ev) => {
       if (typing(ev) || ev.metaKey || ev.ctrlKey || ev.altKey) return;
-      if (ev.code === 'KeyZ' && !ev.repeat) { this.pcOctave = Math.max(0, this.pcOctave - 1); this.updateInfo(); return; }
-      if (ev.code === 'KeyX' && !ev.repeat) { this.pcOctave = Math.min(8, this.pcOctave + 1); this.updateInfo(); return; }
-      if (ev.code === 'KeyC' && !ev.repeat) { this.velocity = Math.max(0.1, Math.round((this.velocity - 0.1) * 10) / 10); this.updateInfo(); return; }
-      if (ev.code === 'KeyV' && !ev.repeat) { this.velocity = Math.min(1, Math.round((this.velocity + 0.1) * 10) / 10); this.updateInfo(); return; }
-      const i = PC_KEYS.indexOf(ev.code);
-      if (i < 0) return;
-      ev.preventDefault();
-      if (ev.repeat) return;
-      const pitch = (this.pcOctave + 1) * 12 + i;
-      if (pitch <= 127) this.press('pc' + ev.code, pitch, this.velocity);
+      if (this.pcDown(ev.code, ev.repeat)) ev.preventDefault();
     });
-    window.addEventListener('keyup', (ev) => {
-      if (PC_KEYS.includes(ev.code)) this.release('pc' + ev.code);
-    });
+    window.addEventListener('keyup', (ev) => this.pcUp(ev.code));
     window.addEventListener('blur', () => this.releaseAll());
+  }
+
+  // A computer key, from this page or passed in by the site around it (app.js).
+  // True when the key belongs to the notes (the page then keeps it to itself).
+  pcDown(code, repeat) {
+    if (code === 'KeyZ' && !repeat) { this.pcOctave = Math.max(0, this.pcOctave - 1); this.updateInfo(); return false; }
+    if (code === 'KeyX' && !repeat) { this.pcOctave = Math.min(8, this.pcOctave + 1); this.updateInfo(); return false; }
+    if (code === 'KeyC' && !repeat) { this.velocity = Math.max(0.1, Math.round((this.velocity - 0.1) * 10) / 10); this.updateInfo(); return false; }
+    if (code === 'KeyV' && !repeat) { this.velocity = Math.min(1, Math.round((this.velocity + 0.1) * 10) / 10); this.updateInfo(); return false; }
+    const i = PC_KEYS.indexOf(code);
+    if (i < 0) return false;
+    if (repeat) return true;
+    const pitch = (this.pcOctave + 1) * 12 + i;
+    if (pitch <= 127) this.press('pc' + code, pitch, this.velocity);
+    return true;
+  }
+  pcUp(code) {
+    if (PC_KEYS.includes(code)) this.release('pc' + code);
+  }
+  // the computer keys only (a key held while the focus moves away never sends its keyup)
+  releasePc() {
+    for (const src of [...this.held.keys()]) if (src.startsWith('pc')) this.release(src);
   }
 
   updateInfo() {

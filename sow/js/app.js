@@ -68,9 +68,21 @@ class App {
 
     this.fit();
     window.addEventListener('resize', () => this.fit());
-    // the site's tab was left: let go of anything still held
+    // From the site around the frame: its tab was left (let go of anything still
+    // held), or the computer keys, which the site passes in while the focus is
+    // on its own page (the tab button just clicked, say) and not in here.
     window.addEventListener('message', (e) => {
-      if (e.source === window.parent && e.data && e.data.sow === 'hide') this.keyboard.releaseAll();
+      const m = e.data;
+      if (e.source !== window.parent || !m) return;
+      if (m.sow === 'hide') this.keyboard.releaseAll();
+      // a note may have to start the audio, which takes a gesture: Chrome counts the
+      // site's key press for this frame too, a browser that doesn't would leave
+      // start() waiting, so there the keys play only once the audio runs
+      else if (m.sow === 'keydown') {
+        if (this.audio.running || navigator.userActivation?.isActive) this.keyboard.pcDown(m.code, m.repeat);
+      }
+      else if (m.sow === 'keyup') this.keyboard.pcUp(m.code);
+      else if (m.sow === 'keys-lost') this.keyboard.releasePc();
     });
     this.loop();
     this.installStart();

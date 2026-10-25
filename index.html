@@ -767,6 +767,8 @@ a.tile:hover .circle { background: var(--orange); border-color: var(--orange); c
 
 // SOW: the SIREN page loads the first time its tab is shown, sizes the frame to
 // its own height, and is told to let go of any held notes when the tab is left.
+// While the tab is shown, the computer keys play it even when the focus is on
+// this page (the tab button just clicked, say): they are passed into the frame.
 (() => {
   const panel = document.getElementById('sow');
   const frame = panel && panel.querySelector('.sow-app');
@@ -784,6 +786,17 @@ a.tile:hover .circle { background: var(--orange); border-color: var(--orange); c
   };
   new MutationObserver(sync).observe(panel, { attributes: true, attributeFilter: ['hidden'] });
   sync();
+
+  const typing = t => t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable);
+  const pass = e => {
+    if (panel.hidden || !frame.src) return;
+    if (e.type === 'keydown' && (typing(e.target) || e.metaKey || e.ctrlKey || e.altKey)) return;
+    frame.contentWindow.postMessage({ sow: e.type, code: e.code, repeat: e.repeat }, '*');
+  };
+  window.addEventListener('keydown', pass);
+  window.addEventListener('keyup', pass);
+  // a key held as the focus leaves this page never sends its keyup here
+  window.addEventListener('blur', () => { if (frame.src) frame.contentWindow.postMessage({ sow: 'keys-lost' }, '*'); });
 })();
 
 // History: filter by name
