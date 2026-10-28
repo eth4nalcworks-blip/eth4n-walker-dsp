@@ -371,11 +371,11 @@ button { font: inherit }
 .sow-app { display: block; width: 100%; height: 46vw; border: 0; background: var(--plate); color-scheme: dark }
 
 /* ---------- works ---------- */
-/* The Spotify playlist and the SoundCloud page, right under the title. The hosted
-   copy turns the Spotify card into the player (export_site.py). */
-.mixes { margin-bottom: clamp(40px, 6vw, 72px) }
-.mixes-label { color: var(--mute); margin-bottom: 14px }
-.listen-list { display: grid; gap: clamp(12px, 1.6vw, 20px) }
+/* The Spotify playlist and the SoundCloud page, right under the title, each under
+   its own label. The hosted copy turns the Spotify card into the player
+   (export_site.py). */
+.works-links { display: grid; gap: clamp(28px, 3.6vw, 40px); margin-bottom: clamp(40px, 6vw, 72px) }
+.works-label { color: var(--mute); margin-bottom: 14px }
 .listen {
   display: flex;
   align-items: center;
@@ -679,19 +679,22 @@ a.tile:hover .circle { background: var(--orange); border-color: var(--orange); c
   <section class="panel wrap" id="works" role="tabpanel" aria-labelledby="tab-works" hidden>
     <h2 class="panel-title display">Works</h2>
 
-    <section class="mixes" aria-labelledby="mixes-h">
-      <h3 class="mixes-label label" id="mixes-h">Mixing Works</h3>
-      <div class="listen-list">
+    <div class="works-links">
+      <section aria-labelledby="mixes-h">
+        <h3 class="works-label label" id="mixes-h">Mixing Works</h3>
         <iframe class="player" src="https://open.spotify.com/embed/playlist/7AB48rMOlIJWbZpCy5cCyp?utm_source=generator&amp;theme=0" allowfullscreen allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy" title="Mixing Works（Spotify）"></iframe>
+      </section>
+      <section aria-labelledby="release-h">
+        <h3 class="works-label label" id="release-h">Release</h3>
         <a class="listen" href="https://soundcloud.com/eth4nalc" target="_blank" rel="noopener">
           <span class="listen-text">
             <span class="label">SoundCloud</span>
-            <span class="listen-name">eth4nalc</span>
+            <span class="listen-name">ETH4N</span>
           </span>
           <span class="circle" aria-hidden="true">↗</span>
         </a>
-      </div>
-    </section>
+      </section>
+    </div>
 
     <!-- 新しいものを上に -->
     <ol class="log" id="log">
