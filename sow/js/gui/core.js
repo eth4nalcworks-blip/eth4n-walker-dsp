@@ -17,10 +17,24 @@
 // a browser, which treats it as sRGB. To look like the plug-in on that screen,
 // every colour is re-expressed as the P3 colour the display would show for the
 // raw value: P3 primaries, the 2.2 curve re-encoded with sRGB's transfer
-// function (which is what CSS display-p3 uses). Without display-p3 support it
+// function (which is what CSS display-p3 uses). Without a display-p3 canvas it
 // falls back to the same colour converted (and clipped) to sRGB.
-
-export const P3 = typeof CSS !== 'undefined' && CSS.supports && CSS.supports('color', 'color(display-p3 0 0 0)');
+//
+// The CSS colour alone is not enough: Firefox parses color(display-p3 ...) but
+// has no display-p3 canvas, and its ImageData takes no settings argument (it
+// reads new ImageData(w, h, {...}) as the (data, w, h) form and throws), so the
+// canvas itself is asked.
+function canvasP3() {
+  try {
+    if (!(typeof CSS !== 'undefined' && CSS.supports && CSS.supports('color', 'color(display-p3 0 0 0)'))) return false;
+    const x = document.createElement('canvas').getContext('2d', { colorSpace: 'display-p3' });
+    if (!x || !x.getContextAttributes || x.getContextAttributes().colorSpace !== 'display-p3') return false;
+    return new ImageData(1, 1, { colorSpace: 'display-p3' }).colorSpace === 'display-p3';
+  } catch {
+    return false;
+  }
+}
+export const P3 = canvasP3();
 const srgbEnc = (l) => (l <= 0.0031308 ? 12.92 * l : 1.055 * Math.pow(l, 1 / 2.4) - 0.055);
 const lin22 = (v) => Math.pow(v / 255, 2.2);
 const P3_TO_SRGB = [[1.2249, -0.2247, 0], [-0.0420, 1.0419, 0], [-0.0197, -0.0786, 1.0979]];
