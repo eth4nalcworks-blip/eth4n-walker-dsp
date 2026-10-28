@@ -411,7 +411,7 @@ button { font: inherit }
 .log li { border-bottom: 1px solid var(--line) }
 .log-row {
   display: grid;
-  grid-template-columns: 112px 136px minmax(0, 1fr) auto;
+  grid-template-columns: 112px minmax(0, 1fr) auto;
   gap: 8px 24px;
   align-items: baseline;
   padding-block: 20px;
@@ -419,7 +419,6 @@ button { font: inherit }
   text-decoration: none;
 }
 .log .date { font: 400 13px/1.6 var(--mono); color: var(--mute); font-variant-numeric: tabular-nums }
-.tag { justify-self: start; padding: 2px 10px; border: 1px solid var(--line-strong); border-radius: 999px; font-size: 10px }
 .log h3 { font-weight: 500; font-size: 16px; line-height: 1.6 }
 .log h3 span { font-weight: 400; font-size: 14px; color: var(--mute) }
 .log-go { font-size: 16px; line-height: 1.6; color: var(--mute); transition: transform .2s, color .2s }
@@ -491,9 +490,9 @@ a.tile:hover .circle { background: var(--orange); border-color: var(--orange); c
   .rate, .terms li { grid-template-columns: minmax(0, 1fr) }
   .rate-list dt small { display: block; margin-left: 0 }
   .tab { flex: 1 1 auto; padding: 8px 2px; font-size: 10px; letter-spacing: .04em }
-  .log-row { grid-template-columns: auto minmax(0, 1fr) auto }
+  .log-row { grid-template-columns: minmax(0, 1fr) auto }
   .log-row > h3 { grid-column: 1 / -1 }
-  .log-go { grid-row: 1; grid-column: 3 }
+  .log-go { grid-row: 1; grid-column: 2 }
   .scope-read { gap: 4px 18px }
 }
 </style>
@@ -690,12 +689,11 @@ a.tile:hover .circle { background: var(--orange); border-color: var(--orange); c
       </section>
     </div>
 
-    <!-- 新しいものを上に。リンクの無い作品は <li class="log-row"> に日付・名義・h3 を直接入れる -->
+    <!-- 新しいものを上に。リンクの無い作品は <li class="log-row"> に日付と h3 を直接入れる -->
     <ol class="log" id="log">
       <li>
         <a class="log-row" href="https://innofract.bandcamp.com/album/immaterial" target="_blank" rel="noopener">
           <span class="date">2026.10</span>
-          <span class="tag label">ETH4N</span>
           <h3>innofract - Immaterial <span>/ マスタリング</span></h3>
           <span class="log-go" aria-hidden="true">↗</span>
         </a>
@@ -703,7 +701,6 @@ a.tile:hover .circle { background: var(--orange); border-color: var(--orange); c
       <li>
         <a class="log-row" href="https://www.youtube.com/watch?v=QDxTp7uLyhQ" target="_blank" rel="noopener">
           <span class="date">2024.07</span>
-          <span class="tag label">ETH4N</span>
           <h3>成人男性三人組 - Magia -Cover- <span>/ ギター演奏</span></h3>
           <span class="log-go" aria-hidden="true">↗</span>
         </a>
