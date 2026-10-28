@@ -34,6 +34,10 @@
   #start .btn { font: bold 13px Arial, sans-serif; letter-spacing: .18em; color: var(--field); background: var(--accent);
                 border: 0; border-radius: 4px; padding: 12px 26px; cursor: pointer; }
   #start .msg { color: var(--dim); font-size: 12px; letter-spacing: .06em; text-align: center; padding: 0 16px; }
+  /* the page could not start (app.js showFailure): the reason, on any width */
+  #start.failed { cursor: default; }
+  #start.failed .btn { display: none; }
+  #start.failed .msg { display: block; color: var(--ink); overflow-wrap: anywhere; }
 
   /* playing surface */
   .kb { display: flex; gap: 8px; height: 112px; margin-top: 10px; padding: 8px; background: var(--panel);

@@ -203,10 +203,27 @@ class App {
   }
 }
 
+// A start that fails before fit() leaves the editor's box without a size, and the
+// message inside it with nowhere to show (on the site: a black frame). Give the
+// box room, show the reason, and tell the site how tall that is.
+function showFailure(e) {
+  const wrap = document.getElementById('stage-wrap');
+  if (!wrap.offsetHeight) {
+    wrap.style.width = '100%';
+    wrap.style.height = '160px';
+  }
+  const start = document.getElementById('start');
+  start.classList.remove('hidden');
+  start.classList.add('failed');
+  start.querySelector('.msg').textContent = `SOW を起動できませんでした（${e && e.name ? e.name + ': ' : ''}${e && e.message ? e.message : e}）`;
+  if (EMBED && window.parent !== window) {
+    window.parent.postMessage({ sow: 'height', h: Math.ceil(document.body.getBoundingClientRect().height) }, '*');
+  }
+}
+
 const app = new App();
 window.sowApp = app;
 app.init().catch((e) => {
   console.error(e);
-  const m = document.querySelector('#start .msg');
-  if (m) m.textContent = 'SOW could not start: ' + e.message;
+  showFailure(e);
 });

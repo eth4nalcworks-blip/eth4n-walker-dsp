@@ -854,13 +854,15 @@ a.tile:hover .circle { background: var(--orange); border-color: var(--orange); c
 
 // Home: the partials of a 55 Hz saw, drawn the way SIREN's BARS view does,
 // with PRISM slowly stretching the series and a harmonic phaser sweeping through it.
+// It keeps moving under prefers-reduced-motion: Windows turns that on in every
+// browser when its animation effects are off (common on audio PCs), and a stopped
+// spectrum reads as a broken page. The motion is slow (23 s and 9 s cycles).
 (() => {
   const cv = document.getElementById('spec');
   const ctx = cv.getContext('2d');
   const rParts = document.getElementById('r-parts');
   const rPrism = document.getElementById('r-prism');
   const rPhase = document.getElementById('r-phase');
-  const reduce = matchMedia('(prefers-reduced-motion: reduce)');
 
   const F0 = 55, FMIN = 20, FMAX = 20000, MAX_PARTIALS = 512, FLOOR_DB = -60;
   const LOG_SPAN = Math.log(FMAX / FMIN);
@@ -936,8 +938,8 @@ a.tile:hover .circle { background: var(--orange); border-color: var(--orange); c
   function update() {
     cancelAnimationFrame(raf);
     raf = 0;
-    if (reduce.matches || !onScreen || document.hidden) {
-      draw(reduce.matches ? 0 : (performance.now() - t0) / 1000);
+    if (!onScreen || document.hidden) {
+      draw((performance.now() - t0) / 1000);
     } else {
       raf = requestAnimationFrame(frame);
     }
@@ -948,7 +950,6 @@ a.tile:hover .circle { background: var(--orange); border-color: var(--orange); c
   new ResizeObserver(() => { resize(); update(); }).observe(cv);
   new IntersectionObserver(([e]) => { onScreen = e.isIntersecting; update(); }).observe(cv);
   document.addEventListener('visibilitychange', update);
-  reduce.addEventListener?.('change', update);
   document.fonts?.ready.then(() => { resize(); update(); });
 })();
 </script>
