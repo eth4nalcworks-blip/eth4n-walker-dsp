@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MORPHEUS — Walker dsp</title>
+<meta name="description" content="MORPHEUS: build wavetables from formula modules and morphing knobs, play them, and download the WAV.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300..700&family=Geist+Mono:wght@400..500&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap">
+<style>
+/* The site's own world (eth4n-site/index.html): a black plate carrying orange
+   and two greys, hairlines, pills, Geist with Geist Mono labels. */
+:root {
+  --orange: #ff6b1a;
+  --ink: #0d0d0d;
+  --panel: #1a1a1a;
+  --panel-hi: #232323;
+  --line: #262626;
+  --line-hi: #3a3a3a;
+  --dim: #7a7a7a;
+  --fg: #d9d9d9;
+  --r-lg: 24px;
+  --r-md: 16px;
+  --sans: "Geist", "Zen Kaku Gothic New", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, system-ui, sans-serif;
+  --mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box }
+html, body { margin: 0; background: var(--ink); color: var(--fg) }
+body { font: 14px/1.5 var(--sans); -webkit-font-smoothing: antialiased; padding: 16px }
+button { font: inherit; color: inherit }
+[hidden] { display: none !important }
+::selection { background: var(--orange); color: var(--ink) }
+:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px }
+
+.mx { max-width: 1400px; margin: 0 auto; display: grid; gap: 12px }
+.label, .cap { font: 500 10px/1.4 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--dim) }
+
+/* full-screen page header (hidden inside the site, which has its own title) */
+.top { display: flex; align-items: baseline; gap: 14px; padding: 4px 4px 8px }
+.top b { font: 600 22px/1 var(--sans); letter-spacing: -.02em; color: var(--orange) }
+html.embed body { padding: 0; background: var(--ink) }
+html.embed .top { display: none }
+
+/* pills, segments */
+.pill {
+  display: inline-flex; align-items: center; gap: 8px; height: 32px; padding: 0 14px;
+  border: 1px solid var(--line-hi); border-radius: 999px; background: transparent;
+  font: 500 10px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--fg);
+  cursor: pointer; white-space: nowrap; transition: background .15s, border-color .15s, color .15s;
+}
+.pill:hover { border-color: var(--dim) }
+.pill:disabled { opacity: .35; cursor: default; border-color: var(--line-hi) }
+.pill.solid { background: var(--orange); border-color: var(--orange); color: var(--ink) }
+.pill.solid:hover { background: #ff7f3a }
+.seg { display: inline-flex; border: 1px solid var(--line-hi); border-radius: 999px; padding: 2px; gap: 2px }
+.seg button {
+  height: 26px; padding: 0 11px; border: 0; border-radius: 999px; background: transparent;
+  font: 500 10px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--dim); cursor: pointer;
+}
+.seg button:hover { color: var(--fg) }
+.seg button[aria-pressed="true"] { background: var(--fg); color: var(--ink) }
+.seg.small button { height: 22px; padding: 0 9px }
+
+/* toolbar */
+.bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px }
+.bar .sp { flex: 1 }
+.preset-name { max-width: 220px; overflow: hidden; text-overflow: ellipsis }
+
+.panel { background: var(--panel); border-radius: var(--r-md); padding: 14px 16px 16px; min-width: 0 }
+.cap { display: flex; align-items: center; gap: 12px; min-height: 22px; margin-bottom: 10px }
+.cap .sp { flex: 1 }
+.cap .val { color: var(--fg) }
+
+/* the two displays */
+.views { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr); gap: 12px }
+canvas { display: block; width: 100%; touch-action: none }
+#wave { height: 220px; cursor: pointer }
+#table { height: 220px; cursor: crosshair }
+#table-panel.drop { box-shadow: inset 0 0 0 2px var(--orange) }
+
+/* the stack */
+.slots { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px }
+.slot {
+  display: grid; grid-template-columns: 18px 22px auto minmax(150px, 220px) minmax(0, 1fr) auto; align-items: center; gap: 10px;
+  padding: 8px 10px; border-radius: 12px; background: var(--panel-hi); border: 1px solid transparent;
+}
+.slot.off { opacity: .45 }
+.slot.err { border-color: var(--orange) }
+.slot.dragging { opacity: .6 }
+.slot.drop-before { box-shadow: 0 -2px 0 var(--orange) }
+.slot.drop-after { box-shadow: 0 2px 0 var(--orange) }
+.grip { cursor: grab; color: var(--dim); font: 14px/1 var(--mono); text-align: center; user-select: none; touch-action: none }
+.dot { width: 14px; height: 14px; border-radius: 50%; border: 1.5px solid var(--dim); background: transparent; padding: 0; cursor: pointer; justify-self: center }
+.dot[aria-pressed="true"] { background: var(--orange); border-color: var(--orange) }
+.mod-btn {
+  display: grid; gap: 2px; text-align: left; padding: 6px 10px; border-radius: 10px; border: 1px solid var(--line-hi);
+  background: transparent; cursor: pointer; min-width: 0;
+}
+.mod-btn:hover { border-color: var(--dim) }
+.mod-btn b { font: 500 13px/1.2 var(--sans); color: var(--fg); overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.mod-btn small { font: 400 10px/1.3 var(--mono); color: var(--dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.knobs { display: flex; flex-wrap: wrap; gap: 2px 4px; min-width: 0 }
+.slot-end { display: flex; gap: 6px; align-items: center }
+.x { width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--line-hi); background: transparent; color: var(--dim); cursor: pointer; font: 13px/1 var(--mono) }
+.x:hover { color: var(--fg); border-color: var(--dim) }
+.x:disabled { opacity: .3; cursor: default }
+.fx { width: auto; padding: 0 9px; border-radius: 999px; font: 500 10px/1 var(--mono); letter-spacing: .08em }
+.fx[aria-pressed="true"] { background: var(--fg); color: var(--ink); border-color: var(--fg) }
+.formula { grid-column: 3 / -1; display: grid; gap: 6px; padding-top: 4px }
+.formula label { display: grid; grid-template-columns: 70px minmax(0, 1fr); align-items: center; gap: 8px }
+.formula input {
+  width: 100%; height: 30px; padding: 0 10px; border-radius: 8px; border: 1px solid var(--line-hi);
+  background: var(--ink); color: var(--fg); font: 400 12px/1 var(--mono); outline: none;
+}
+.formula input:focus { border-color: var(--orange) }
+.formula .help { color: var(--dim); font: 400 10px/1.5 var(--mono) }
+.formula .error { color: var(--orange); font: 400 11px/1.5 var(--mono) }
+.add { margin-top: 8px }
+
+/* post */
+.post { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line) }
+.post .group { display: flex; align-items: center; gap: 8px }
+.stepper { display: inline-flex; align-items: center; border: 1px solid var(--line-hi); border-radius: 999px; height: 30px }
+.stepper button { width: 28px; height: 28px; border: 0; background: transparent; color: var(--dim); cursor: pointer; font: 13px/1 var(--mono) }
+.stepper button:hover { color: var(--fg) }
+.stepper span { min-width: 34px; text-align: center; font: 500 11px/1 var(--mono); color: var(--fg) }
+
+/* knobs */
+.knob { display: grid; justify-items: center; width: 58px; user-select: none; -webkit-user-select: none }
+.knob .kn { font: 500 9px/1.2 var(--mono); letter-spacing: .08em; color: var(--dim); text-transform: uppercase; white-space: nowrap }
+.knob svg { width: 42px; height: 42px; cursor: ns-resize; touch-action: none; overflow: visible }
+.knob .kv { font: 500 10px/1.2 var(--mono); color: var(--fg); white-space: nowrap; min-height: 12px }
+.knob.locked .kn::after { content: " •"; color: var(--orange) }
+.knob:focus-visible { outline: none }
+.knob:focus-visible svg { outline: 2px solid var(--orange); outline-offset: 2px; border-radius: 50% }
+
+/* preview */
+.pv { display: flex; flex-wrap: wrap; gap: 14px 22px; align-items: flex-start }
+.pv .group { display: grid; gap: 6px }
+.pv .group > .label { padding-left: 4px }
+.pv .row { display: flex; flex-wrap: wrap; gap: 2px; align-items: flex-start }
+.pv .opts { display: grid; gap: 4px; justify-items: start; padding-top: 2px }
+.note-box { display: grid; gap: 4px; justify-items: center; width: 72px; padding-top: 2px }
+.note-box .stepper span { min-width: 30px }
+
+/* keyboard */
+.kb { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: end }
+.keys { position: relative; height: 92px; touch-action: none; user-select: none }
+.key { position: absolute; top: 0; border-radius: 0 0 6px 6px }
+.key.white { height: 100%; background: var(--fg); border: 1px solid var(--ink) }
+.key.black { height: 58%; background: #050505; border: 1px solid var(--ink); z-index: 1 }
+.key.white.on { background: var(--orange) }
+.key.black.on { background: #b84a0f }
+.key span { position: absolute; bottom: 5px; left: 0; right: 0; text-align: center; font: 500 9px/1 var(--mono); color: #6a6a6a; pointer-events: none }
+.kb-side { display: grid; gap: 8px; justify-items: end; text-align: right }
+.kb-side .label b { color: var(--fg); font-weight: 500 }
+
+.status { margin: 2px 4px 0; min-height: 18px; font: 400 11px/1.5 var(--mono); color: var(--dim) }
+.status.warn { color: var(--orange) }
+
+/* start overlay */
+#start {
+  position: fixed; inset: 0; z-index: 20; display: grid; place-content: center; justify-items: center; gap: 12px;
+  background: rgba(13, 13, 13, .55); backdrop-filter: blur(2px); cursor: pointer;
+}
+#start .msg { font: 400 12px/1.6 var(--mono); color: var(--fg); text-align: center; padding: 0 20px }
+#start.failed { cursor: default }
+#start.failed .pill { display: none }
+html.embed #start { position: absolute }
+/* inside the site the frame is as tall as the page, so "the middle of the
+   viewport" is far below the panels; open the dialog under the toolbar instead */
+html.embed .dialog-back { position: absolute; place-items: start center; padding-top: 64px }
+
+/* menus and the import dialog */
+.menu {
+  position: fixed; z-index: 30; min-width: 200px; max-height: min(420px, 70vh); overflow: auto; padding: 6px;
+  background: var(--panel-hi); border: 1px solid var(--line-hi); border-radius: 12px; box-shadow: 0 12px 40px rgba(0,0,0,.6);
+}
+.menu .h { padding: 8px 10px 4px }
+.menu button {
+  display: grid; width: 100%; text-align: left; gap: 1px; padding: 7px 10px; border: 0; border-radius: 8px; background: transparent; cursor: pointer;
+}
+.menu button:hover, .menu button.cur { background: var(--line-hi) }
+.menu button b { font: 500 13px/1.3 var(--sans); color: var(--fg) }
+.menu button small { font: 400 10px/1.3 var(--mono); color: var(--dim) }
+.menu hr { border: 0; border-top: 1px solid var(--line-hi); margin: 6px 4px }
+.dialog-back { position: fixed; inset: 0; z-index: 25; background: rgba(0,0,0,.55); display: grid; place-items: center; padding: 16px }
+.dialog { width: min(760px, 100%); background: var(--panel); border: 1px solid var(--line-hi); border-radius: var(--r-md); padding: 18px; display: grid; gap: 14px }
+.dialog h3 { margin: 0; font: 500 15px/1.3 var(--sans); color: var(--fg) }
+.dialog .meta { font: 400 11px/1.5 var(--mono); color: var(--dim) }
+#imp-wave { height: 140px; border-radius: 10px; background: var(--ink); cursor: ew-resize }
+.dialog .row { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center }
+.dialog .row .group { display: flex; gap: 8px; align-items: center }
+.dialog .end { display: flex; justify-content: flex-end; gap: 8px }
+
+@media (max-width: 900px) {
+  .views { grid-template-columns: minmax(0, 1fr) }
+  #wave, #table { height: 180px }
+  .slot { grid-template-columns: 18px 22px auto minmax(0, 1fr) auto }
+  .slot .knobs { grid-column: 1 / -1; padding-left: 4px }
+  .formula { grid-column: 1 / -1 }
+}
+@media (max-width: 560px) {
+  body { padding: 10px }
+  .panel { padding: 12px }
+  .slot { grid-template-columns: 18px 22px minmax(0, 1fr) auto; gap: 8px }
+  .slot .dom { grid-column: 3; grid-row: 2; justify-self: start }
+  .slot .mod-btn { grid-column: 3 }
+  .slot .knobs { grid-row: 3 }
+  .formula label { grid-template-columns: minmax(0, 1fr) }
+  .kb { grid-template-columns: minmax(0, 1fr) }
+  .kb-side { justify-items: start; text-align: left }
+  .kb-side .label:first-child { display: none }
+  .knob { width: 52px }
+}
+@media (prefers-reduced-motion: reduce) { .pill { transition: none } }
+</style>
+</head>
+<body>
+<main class="mx" id="app">
+  <div class="top"><b>MORPHEUS</b><span class="label">Wavetable generator — Walker dsp</span></div>
+
+  <div class="bar">
+    <button class="pill" id="preset" aria-haspopup="menu"><span class="preset-name" id="preset-name">INIT</span><span aria-hidden="true">▾</span></button>
+    <button class="pill" id="undo" title="元に戻す (Ctrl/⌘+Z)">Undo</button>
+    <button class="pill" id="redo" title="やり直す (Ctrl/⌘+Shift+Z)">Redo</button>
+    <span class="seg" id="ab" role="group" aria-label="A / B"><button aria-pressed="true">A</button><button aria-pressed="false">B</button></span>
+    <button class="pill" id="copy" title="今の側をもう片方へ写す">Copy</button>
+    <span class="seg" id="rand" role="group" aria-label="Random"><button title="ノブの位置を振り直す">Rnd knobs</button><button title="モジュールごと振り直す">Rnd all</button></span>
+    <span class="sp"></span>
+    <button class="pill" id="import">Import audio</button>
+    <button class="pill solid" id="download">Download WAV ↓</button>
+  </div>
+
+  <section class="views">
+    <div class="panel" id="wave-panel">
+      <div class="cap"><span id="wave-cap">Waveform</span><span class="sp"></span><span class="val" id="frame-no"></span></div>
+      <canvas id="wave" title="クリックで波形と倍音を切り替え"></canvas>
+    </div>
+    <div class="panel" id="table-panel">
+      <div class="cap"><span>Wavetable</span><span class="sp"></span><span id="table-info"></span></div>
+      <canvas id="table" title="クリックでフレームを選ぶ・音声ファイルをドロップでテーブルに"></canvas>
+    </div>
+  </section>
+
+  <section class="panel" id="stack-panel">
+    <div class="cap">
+      <span>Formula stack</span>
+      <span class="seg small" id="drag-mode" role="group" aria-label="ノブのドラッグ"><button aria-pressed="true" data-mode="both">Both</button><button aria-pressed="false" data-mode="start">Start</button><button aria-pressed="false" data-mode="end">End</button></span>
+      <span class="sp"></span>
+      <span id="source-chip" hidden></span>
+    </div>
+    <ol class="slots" id="slots"></ol>
+    <button class="pill add" id="add-slot">+ Add slot</button>
+    <div class="post" id="post">
+      <span class="label">Post</span>
+      <span class="group"><span class="label">Normalize</span><span class="seg small" id="norm"><button>Off</button><button>Global</button><button>Per frame</button></span></span>
+      <button class="pill" id="dc" aria-pressed="false">DC block</button>
+      <button class="pill" id="lock" aria-pressed="false">Phase lock</button>
+      <span class="group"><span class="label">Limit</span><span class="seg small" id="limit"><button>Off</button><button>512</button><button>256</button><button>128</button><button>64</button></span></span>
+      <span class="group"><span class="label">Frames</span><span class="stepper" id="frames"><button aria-label="減らす">‹</button><span>256</span><button aria-label="増やす">›</button></span></span>
+    </div>
+  </section>
+
+  <section class="panel" id="preview-panel">
+    <div class="cap"><span>Preview</span><span class="sp"></span><span id="live-pos"></span></div>
+    <div class="pv" id="pv"></div>
+  </section>
+
+  <section class="kb">
+    <div class="keys" id="keys"></div>
+    <div class="kb-side">
+      <span class="label"><b>F〜;</b> white · <b>T Y I O P</b> black · <b>Z X</b> octave</span>
+      <button class="pill" id="midi">MIDI</button>
+    </div>
+  </section>
+
+  <p class="status" id="status" role="status"></p>
+</main>
+
+<!-- only shown when the page cannot start (app.js showFailure); the audio itself
+     starts on the first note, which is the gesture it needs -->
+<div id="start" hidden><div class="msg"></div></div>
+<input type="file" id="file-audio" accept="audio/*,.wav,.aif,.aiff,.flac,.mp3,.ogg" hidden>
+<input type="file" id="file-mph" accept=".mph,text/plain" hidden>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

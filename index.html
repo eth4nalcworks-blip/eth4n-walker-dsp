@@ -366,9 +366,11 @@ button { font: inherit }
 .sow-card-name { font-weight: 500; font-size: clamp(26px, 3.2vw, 40px); line-height: 1.05; letter-spacing: -.03em }
 .sow-card .circle { width: 48px; height: 48px; border-color: var(--gray-700); color: var(--orange) }
 .sow-card:hover .circle { background: var(--orange); border-color: var(--orange); color: var(--ink) }
-/* the hosted page embeds SOW itself (export_site.py): a dark tile holding the frame */
-.sow-frame { padding: clamp(8px, 1.4vw, 16px); border: 1px solid var(--plate-line); border-radius: var(--r-lg); background: var(--plate) }
+/* the hosted page embeds SOW and MORPHEUS themselves (export_site.py): a dark tile
+   holding the frame, which each page sizes to its own height */
+.sow-frame, .app-frame { padding: clamp(8px, 1.4vw, 16px); border: 1px solid var(--plate-line); border-radius: var(--r-lg); background: var(--plate) }
 .sow-app { display: block; width: 100%; height: 46vw; border: 0; background: var(--plate); color-scheme: dark }
+.app-embed { display: block; width: 100%; height: 1200px; border: 0; background: var(--plate); color-scheme: dark }
 
 /* ---------- works ---------- */
 /* The Spotify playlist and the SoundCloud page, right under the title, each under
@@ -510,6 +512,7 @@ a.tile:hover .circle { background: var(--orange); border-color: var(--orange); c
       <button type="button" class="tab pill label" role="tab" id="tab-walker" aria-controls="walker" aria-selected="false" tabindex="-1">Walker<span class="tab-more"> dsp</span></button>
       <button type="button" class="tab pill label" role="tab" id="tab-price" aria-controls="price" aria-selected="false" tabindex="-1">Price</button>
       <button type="button" class="tab pill label" role="tab" id="tab-sow" aria-controls="sow" aria-selected="false" tabindex="-1">SOW</button>
+      <button type="button" class="tab pill label" role="tab" id="tab-morpheus" aria-controls="morpheus" aria-selected="false" tabindex="-1">Morpheus</button>
       <button type="button" class="tab pill label" role="tab" id="tab-works" aria-controls="works" aria-selected="false" tabindex="-1">Works</button>
       <button type="button" class="tab pill label" role="tab" id="tab-links" aria-controls="links" aria-selected="false" tabindex="-1">Links</button>
     </div>
@@ -668,6 +671,15 @@ a.tile:hover .circle { background: var(--orange); border-color: var(--orange); c
     <div class="sow-frame"><iframe class="sow-app" data-src="sow/?embed" title="SOW — SIREN Lite" allow="autoplay; midi; fullscreen"></iframe></div>
   </section>
 
+  <!-- MORPHEUS -->
+  <section class="panel wrap" id="morpheus" role="tabpanel" aria-labelledby="tab-morpheus" hidden>
+    <div class="sow-head">
+      <h2 class="panel-title display">Morpheus<span class="sow-sub label">Wavetable generator</span></h2>
+      <a class="sow-open pill label" id="morpheus-open" href="morpheus/" target="_blank" rel="noopener">Full screen ↗</a>
+    </div>
+    <div class="app-frame"><iframe class="app-embed" data-src="morpheus/?embed" title="MORPHEUS" allow="autoplay; midi; fullscreen"></iframe></div>
+  </section>
+
   <!-- WORKS -->
   <section class="panel wrap" id="works" role="tabpanel" aria-labelledby="tab-works" hidden>
     <h2 class="panel-title display">Works</h2>
@@ -790,24 +802,25 @@ a.tile:hover .circle { background: var(--orange); border-color: var(--orange); c
   select(location.hash.slice(1), { scroll: false });
 })();
 
-// SOW: the SIREN page loads the first time its tab is shown, sizes the frame to
-// its own height, and is told to let go of any held notes when the tab is left.
-// While the tab is shown, the computer keys play it even when the focus is on
-// this page (the tab button just clicked, say): they are passed into the frame.
-(() => {
-  const panel = document.getElementById('sow');
-  const frame = panel && panel.querySelector('.sow-app');
+// SOW and MORPHEUS: each page loads the first time its tab is shown, sizes its
+// frame to its own height, and is told to let go of any held notes when the tab
+// is left. While the tab is shown, the computer keys play it even when the focus
+// is on this page (the tab button just clicked, say): they are passed into the
+// frame. `ns` is the key the page's messages carry ({ sow: ... }, { morpheus: ... }).
+function embedApp(panelId, frameSel, ns, guess) {
+  const panel = document.getElementById(panelId);
+  const frame = panel && panel.querySelector(frameSel);
   if (!frame) return;
-  const guess = () => { frame.style.height = Math.round(frame.clientWidth * 330 / 1000 + 132) + 'px'; };
+  const tell = (m) => frame.contentWindow.postMessage({ [ns]: m.t, ...m.rest }, '*');
   window.addEventListener('message', (e) => {
-    if (e.source === frame.contentWindow && e.data && e.data.sow === 'height') frame.style.height = e.data.h + 'px';
+    if (e.source === frame.contentWindow && e.data && e.data[ns] === 'height') frame.style.height = e.data.h + 'px';
   });
   const sync = () => {
     if (panel.hidden) {
-      if (frame.src) frame.contentWindow.postMessage({ sow: 'hide' }, '*');
+      if (frame.src) tell({ t: 'hide' });
       return;
     }
-    if (!frame.src) { frame.src = frame.dataset.src; guess(); }
+    if (!frame.src) { frame.src = frame.dataset.src; guess(frame); }
   };
   new MutationObserver(sync).observe(panel, { attributes: true, attributeFilter: ['hidden'] });
   sync();
@@ -816,13 +829,15 @@ a.tile:hover .circle { background: var(--orange); border-color: var(--orange); c
   const pass = e => {
     if (panel.hidden || !frame.src) return;
     if (e.type === 'keydown' && (typing(e.target) || e.metaKey || e.ctrlKey || e.altKey)) return;
-    frame.contentWindow.postMessage({ sow: e.type, code: e.code, repeat: e.repeat }, '*');
+    tell({ t: e.type, rest: { code: e.code, repeat: e.repeat } });
   };
   window.addEventListener('keydown', pass);
   window.addEventListener('keyup', pass);
   // a key held as the focus leaves this page never sends its keyup here
-  window.addEventListener('blur', () => { if (frame.src) frame.contentWindow.postMessage({ sow: 'keys-lost' }, '*'); });
-})();
+  window.addEventListener('blur', () => { if (frame.src) tell({ t: 'keys-lost' }); });
+}
+embedApp('sow', '.sow-app', 'sow', (f) => { f.style.height = Math.round(f.clientWidth * 330 / 1000 + 132) + 'px'; });
+embedApp('morpheus', '.app-embed', 'morpheus', () => {});
 
 // Links: copy the mail address. If the clipboard is refused, select the text
 // so the viewer can copy it themselves.
