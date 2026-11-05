@@ -366,7 +366,7 @@ button { font: inherit }
 .sow-card-name { font-weight: 500; font-size: clamp(26px, 3.2vw, 40px); line-height: 1.05; letter-spacing: -.03em }
 .sow-card .circle { width: 48px; height: 48px; border-color: var(--gray-700); color: var(--orange) }
 .sow-card:hover .circle { background: var(--orange); border-color: var(--orange); color: var(--ink) }
-/* the hosted page embeds SOW and MORPHEUS themselves (export_site.py): a dark tile
+/* the hosted page embeds SOW and W GEN themselves (export_site.py): a dark tile
    holding the frame, which each page sizes to its own height */
 .sow-frame, .app-frame { padding: clamp(8px, 1.4vw, 16px); border: 1px solid var(--plate-line); border-radius: var(--r-lg); background: var(--plate) }
 .sow-app { display: block; width: 100%; height: 46vw; border: 0; background: var(--plate); color-scheme: dark }
@@ -512,7 +512,7 @@ a.tile:hover .circle { background: var(--orange); border-color: var(--orange); c
       <button type="button" class="tab pill label" role="tab" id="tab-walker" aria-controls="walker" aria-selected="false" tabindex="-1">Walker<span class="tab-more"> dsp</span></button>
       <button type="button" class="tab pill label" role="tab" id="tab-price" aria-controls="price" aria-selected="false" tabindex="-1">Price</button>
       <button type="button" class="tab pill label" role="tab" id="tab-sow" aria-controls="sow" aria-selected="false" tabindex="-1">SOW</button>
-      <button type="button" class="tab pill label" role="tab" id="tab-morpheus" aria-controls="morpheus" aria-selected="false" tabindex="-1">Morpheus</button>
+      <button type="button" class="tab pill label" role="tab" id="tab-wgen" aria-controls="wgen" aria-selected="false" tabindex="-1">W GEN</button>
       <button type="button" class="tab pill label" role="tab" id="tab-works" aria-controls="works" aria-selected="false" tabindex="-1">Works</button>
       <button type="button" class="tab pill label" role="tab" id="tab-links" aria-controls="links" aria-selected="false" tabindex="-1">Links</button>
     </div>
@@ -671,13 +671,13 @@ a.tile:hover .circle { background: var(--orange); border-color: var(--orange); c
     <div class="sow-frame"><iframe class="sow-app" data-src="sow/?embed" title="SOW — SIREN Lite" allow="autoplay; midi; fullscreen"></iframe></div>
   </section>
 
-  <!-- MORPHEUS -->
-  <section class="panel wrap" id="morpheus" role="tabpanel" aria-labelledby="tab-morpheus" hidden>
+  <!-- W GEN (the MORPHEUS engine) -->
+  <section class="panel wrap" id="wgen" role="tabpanel" aria-labelledby="tab-wgen" hidden>
     <div class="sow-head">
-      <h2 class="panel-title display">Morpheus<span class="sow-sub label">Wavetable generator</span></h2>
-      <a class="sow-open pill label" id="morpheus-open" href="morpheus/" target="_blank" rel="noopener">Full screen ↗</a>
+      <h2 class="panel-title display">W GEN<span class="sow-sub label">Wavetable generator</span></h2>
+      <a class="sow-open pill label" id="wgen-open" href="wgen/" target="_blank" rel="noopener">Full screen ↗</a>
     </div>
-    <div class="app-frame"><iframe class="app-embed" data-src="morpheus/?embed" title="MORPHEUS" allow="autoplay; midi; fullscreen"></iframe></div>
+    <div class="app-frame"><iframe class="app-embed" data-src="wgen/?embed" title="W GEN" allow="autoplay; midi; fullscreen"></iframe></div>
   </section>
 
   <!-- WORKS -->
@@ -771,6 +771,7 @@ a.tile:hover .circle { background: var(--orange); border-color: var(--orange); c
 
   function select(id, { focus = false, scroll = true } = {}) {
     if (id === 'history') id = 'works';   // the tab was called History before
+    if (id === 'morpheus') id = 'wgen';   // ...and this one MORPHEUS
     if (!ids.includes(id)) return;
     tabs.forEach(t => {
       const on = t.getAttribute('aria-controls') === id;
@@ -802,7 +803,7 @@ a.tile:hover .circle { background: var(--orange); border-color: var(--orange); c
   select(location.hash.slice(1), { scroll: false });
 })();
 
-// SOW and MORPHEUS: each page loads the first time its tab is shown, sizes its
+// SOW and W GEN: each page loads the first time its tab is shown, sizes its
 // frame to its own height, and is told to let go of any held notes when the tab
 // is left. While the tab is shown, the computer keys play it even when the focus
 // is on this page (the tab button just clicked, say): they are passed into the
@@ -837,7 +838,7 @@ function embedApp(panelId, frameSel, ns, guess) {
   window.addEventListener('blur', () => { if (frame.src) tell({ t: 'keys-lost' }); });
 }
 embedApp('sow', '.sow-app', 'sow', (f) => { f.style.height = Math.round(f.clientWidth * 330 / 1000 + 132) + 'px'; });
-embedApp('morpheus', '.app-embed', 'morpheus', () => {});
+embedApp('wgen', '.app-embed', 'morpheus', () => {});
 
 // Links: copy the mail address. If the clipboard is refused, select the text
 // so the viewer can copy it themselves.

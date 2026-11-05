@@ -1,10 +1,10 @@
-// MORPHEUS for the web: the page. Three things: Random rolls a whole stack
+// W GEN, the web page built on the MORPHEUS engine. Three things: Random rolls a whole stack
 // (dsp/randomize.h with modules: 1-8 slots, a generator first), the table is
 // shown, and Download WAV writes it the way the app's RENDER does. The keyboard
 // plays it through the preview synth at its default settings. Nothing on the
 // page edits a module.
 //
-// ?embed: shown inside the site's MORPHEUS tab (an iframe). No title, and the
+// ?embed: shown inside the site's W GEN tab (an iframe). No title, and the
 // page tells the parent how tall it is ({ morpheus: 'height', h }).
 
 import * as mph from './mph.js';
@@ -147,7 +147,7 @@ class App {
     const r = await this.gen.call({ t: 'export', mph: mph.save(this.patch) });
     btn.disabled = false;
     if (r.error) { this.status('Could not render: ' + r.error, true); return; }
-    const name = `MORPHEUS_${stamp()}.wav`;
+    const name = `W-GEN_${stamp()}.wav`;
     const url = URL.createObjectURL(new Blob([r.bytes], { type: 'audio/wav' }));
     const a = document.createElement('a');
     a.href = url;
@@ -196,7 +196,7 @@ const stamp = () => {
 function showFailure(e) {
   const s = $('start');
   s.hidden = false;
-  s.querySelector('.msg').textContent = `MORPHEUS を起動できませんでした（${e && e.name ? e.name + ': ' : ''}${e && e.message ? e.message : e}）`;
+  s.querySelector('.msg').textContent = `W GEN を起動できませんでした（${e && e.name ? e.name + ': ' : ''}${e && e.message ? e.message : e}）`;
 }
 
 const app = new App();
