@@ -46,32 +46,54 @@ class Gen {
 //=============================================================================
 // the preview synth
 
+// The worklet, the synth's wasm and the table are all loaded when the page
+// opens, into a context that waits suspended. The first note then only has to
+// resume it -- the one step that needs a gesture -- instead of waiting for a
+// module load, a fetch, a compile and a 10 MB table. (Starting all of that on
+// the first key press is what made the first note late.)
+//
+// Everything for the synth goes through one queue, in order, whether the node
+// exists yet or not: a note-off sent while its note-on is still waiting must
+// not be dropped or overtake it, or the note never stops.
 class Audio {
-  constructor() { this.ctx = null; this.node = null; this.play = null; this.params = null; this.onPos = null; }
+  constructor() { this.ctx = null; this.node = null; this.queue = []; this.onPos = null; this.loading = null; }
   get running() { return !!this.ctx && this.ctx.state === 'running'; }
-  async start() {
-    if (this.ctx) { await this.ctx.resume(); return; }
+  load() {
+    if (this.loading) return this.loading;
+    // created here, synchronously, so a gesture that comes before the load is
+    // done can still resume it inside its own event handler (Safari asks that)
     const ctx = new AudioContext({ latencyHint: 'interactive' });
     this.ctx = ctx;
-    const base = new URL('..', import.meta.url);
-    await ctx.audioWorklet.addModule(new URL('morph-worklet.js', base));
-    const wasm = await (await fetch(new URL('gen/morph_synth.wasm', base))).arrayBuffer();
-    const node = new AudioWorkletNode(ctx, 'morpheus-preview', {
-      numberOfInputs: 0, numberOfOutputs: 1, outputChannelCount: [2], processorOptions: { wasm },
-    });
-    node.port.onmessage = (e) => { if (e.data.t === 'pos') this.onPos?.(e.data); };
-    node.connect(ctx.destination);
-    this.node = node;
-    if (this.params) node.port.postMessage({ t: 'params', v: this.params });
-    if (this.play) this.sendPlay(this.play);
-    await ctx.resume();
+    this.loading = (async () => {
+      const base = new URL('..', import.meta.url);
+      const [, wasm] = await Promise.all([
+        ctx.audioWorklet.addModule(new URL('morph-worklet.js', base)),
+        fetch(new URL('gen/morph_synth.wasm', base)).then((r) => r.arrayBuffer()),
+      ]);
+      const node = new AudioWorkletNode(ctx, 'morpheus-preview', {
+        numberOfInputs: 0, numberOfOutputs: 1, outputChannelCount: [2], processorOptions: { wasm },
+      });
+      node.port.onmessage = (e) => { if (e.data.t === 'pos') this.onPos?.(e.data); };
+      node.connect(ctx.destination);
+      this.node = node;
+      for (const [m, transfer] of this.queue) node.port.postMessage(m, transfer);
+      this.queue = [];
+    })();
+    return this.loading;
   }
-  setParams(v) { this.params = v; this.node?.port.postMessage({ t: 'params', v }); }
-  // the pyramid is kept (not transferred) so a later start() can hand it over
-  setPlay(p) { this.play = p; if (this.node) this.sendPlay(p); }
-  sendPlay(p) { this.node.port.postMessage({ t: 'play', levels: p.levels.map((a) => a.slice()), frames: p.frames }); }
-  note(n, vel, on) { this.node?.port.postMessage({ t: 'note', n, vel, on }); }
-  off() { this.node?.port.postMessage({ t: 'off' }); }
+  // call from inside the gesture's handler
+  resume() { if (this.ctx && this.ctx.state !== 'running') return this.ctx.resume(); }
+  send(m, transfer = []) {
+    if (this.node) { this.node.port.postMessage(m, transfer); return; }
+    // only the newest settings and the newest table are worth delivering later
+    if (m.t === 'params' || m.t === 'play') this.queue = this.queue.filter(([q]) => q.t !== m.t);
+    this.queue.push([m, transfer]);
+  }
+  setParams(v) { this.send({ t: 'params', v }); }
+  // handed over, not copied: the page has no use for the pyramid itself
+  setPlay(levels, frames) { this.send({ t: 'play', levels, frames }, levels.map((a) => a.buffer)); }
+  note(n, vel, on) { this.send({ t: 'note', n, vel, on }); }
+  off() { this.send({ t: 'off' }); }
 }
 
 //=============================================================================
@@ -86,9 +108,15 @@ class App {
     this.patch.preview = mph.defaultPreview();
     this.frames = 1;
 
+    this.audio.load().catch((e) => {
+      console.error(e);
+      this.status('Audio could not start: ' + e.message, true);
+    });
+    for (const t of ['pointerdown', 'keydown']) window.addEventListener(t, () => this.wake(), true);
+
     this.tableView = new TableView($('table'));
     this.gen.on('table', (m) => this.onTable(m));
-    this.gen.on('play', (m) => this.audio.setPlay({ levels: m.levels, frames: m.frames }));
+    this.gen.on('play', (m) => this.audio.setPlay(m.levels, m.frames));
     this.audio.onPos = (m) => this.tableView.setLive(m.active ? Math.round(clamp(m.pos, 0, 1) * (this.frames - 1)) : -1);
     this.sendParams();
 
@@ -101,7 +129,7 @@ class App {
         this.sendParams();
       },
     });
-    $('midi').addEventListener('click', () => { this.ensureAudio(); this.keyboard.enableMidi($('midi')); });
+    $('midi').addEventListener('click', () => this.keyboard.enableMidi($('midi')));   // the click wakes the audio
     $('random').addEventListener('click', () => this.roll());
     $('download').addEventListener('click', () => this.download());
     this.installEmbed();
@@ -127,18 +155,16 @@ class App {
     $('info').textContent = `${n} slot${n > 1 ? 's' : ''} · ${m.frames} frames × 2048`;
   }
 
+  // sent at once, in order; the queue holds it if the synth is not there yet
   noteEvent(n, vel) {
-    if (vel > 0) this.ensureAudio().then(() => this.audio.note(n, vel, true));
-    else this.audio.note(n, 0, false);
+    if (vel > 0) this.wake();
+    this.audio.note(n, vel, vel > 0);
   }
-  async ensureAudio() {
-    if (this.audio.running) return;
-    if (this.starting) return this.starting;
-    this.starting = this.audio.start().catch((e) => {
-      console.error(e);
-      this.status('Audio could not start: ' + e.message, true);
-    }).finally(() => { this.starting = null; });
-    return this.starting;
+  // Any gesture on the page resumes the audio, so even the first note sounds
+  // on time. Called inside the gesture's handler, not after an await.
+  wake() {
+    const p = this.audio.resume();
+    p?.catch((e) => this.status('Audio could not start: ' + e.message, true));
   }
 
   async download() {
