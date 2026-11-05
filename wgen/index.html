@@ -85,6 +85,7 @@ html.embed #start { position: absolute }
   .stage { padding: 12px }
   .actions .pill { height: 44px; padding: 0 18px; flex: 1; justify-content: center }
   .actions .sp { display: none }
+  #download { flex-basis: 100% }
   .kb-hint { display: none }
 }
 @media (prefers-reduced-motion: reduce) { .pill { transition: none } }
@@ -101,6 +102,7 @@ html.embed #start { position: absolute }
 
   <div class="actions">
     <button class="pill" id="random" type="button">Random ↻</button>
+    <button class="pill" id="spectral" type="button" aria-pressed="false" title="Random がスペクトル領域のモジュールだけで組む">Only spectral</button>
     <span class="sp"></span>
     <button class="pill solid" id="download" type="button">Download WAV ↓</button>
   </div>

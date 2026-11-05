@@ -8,7 +8,7 @@
 //
 // In:  { t: 'patch', mph, drag }      generate (drag: skip the pyramid)
 //      { t: 'analyze', frame, id }    harmonic magnitudes of one frame
-//      { t: 'random', modules, seed, id }
+//      { t: 'random', modules, seed, spectral, id }
 //      { t: 'import', bytes?, samples?, rate?, id }   a file to work from
 //      { t: 'range', begin, end, frames, method, id } cut the held file
 //      { t: 'source-clear' }
@@ -78,7 +78,7 @@ function handle(m) {
     }
     case 'random': {
       withString(m.mph, (p) => M._gen_set_patch(p));
-      reply(m.id, { mph: str(M._gen_randomize(m.modules ? 1 : 0, m.seed)) });
+      reply(m.id, { mph: str(M._gen_randomize(m.modules ? 1 : 0, m.seed, m.spectral ? 1 : 0)) });
       break;
     }
     case 'import': {

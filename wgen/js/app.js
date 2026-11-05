@@ -1,8 +1,8 @@
-// W GEN, the web page built on the MORPHEUS engine. Three things: Random rolls a whole stack
-// (dsp/randomize.h with modules: 1-8 slots, a generator first), the table is
-// shown, and Download WAV writes it the way the app's RENDER does. The keyboard
-// plays it through the preview synth at its default settings. Nothing on the
-// page edits a module.
+// W GEN, the web page built on the MORPHEUS engine. Three things: Random rolls
+// a whole stack (dsp/randomize.h with modules: 1-8 slots, a generator first;
+// ONLY SPECTRAL keeps every slot spectral), the table is shown, and Download WAV
+// writes it the way the app's RENDER does. The keyboard plays it through the
+// preview synth at its default settings. Nothing on the page edits a module.
 //
 // ?embed: shown inside the site's W GEN tab (an iframe). No title, and the
 // page tells the parent how tall it is ({ morpheus: 'height', h }).
@@ -131,6 +131,15 @@ class App {
     });
     $('midi').addEventListener('click', () => this.keyboard.enableMidi($('midi')));   // the click wakes the audio
     $('random').addEventListener('click', () => this.roll());
+    // remembered per viewer; it applies from the next Random
+    this.spectralOnly = false;
+    try { this.spectralOnly = localStorage.getItem('wgen.spectralOnly') === '1'; } catch {}
+    $('spectral').setAttribute('aria-pressed', String(this.spectralOnly));
+    $('spectral').addEventListener('click', () => {
+      this.spectralOnly = !this.spectralOnly;
+      $('spectral').setAttribute('aria-pressed', String(this.spectralOnly));
+      try { localStorage.setItem('wgen.spectralOnly', this.spectralOnly ? '1' : '0'); } catch {}
+    });
     $('download').addEventListener('click', () => this.download());
     this.installEmbed();
     await this.roll();   // open on something worth hearing rather than a sine
@@ -141,7 +150,7 @@ class App {
   }
 
   async roll() {
-    const r = await this.gen.call({ t: 'random', mph: mph.save(this.patch), modules: true, seed: Math.floor(Math.random() * 2 ** 32) });
+    const r = await this.gen.call({ t: 'random', mph: mph.save(this.patch), modules: true, spectral: this.spectralOnly, seed: Math.floor(Math.random() * 2 ** 32) });
     const p = mph.load(r.mph, this.counts);
     p.preview = this.patch.preview;
     this.patch = p;
