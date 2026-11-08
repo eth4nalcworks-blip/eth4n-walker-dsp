@@ -426,7 +426,15 @@ button { font: inherit }
 .log-go { font-size: 16px; line-height: 1.6; color: var(--mute); transition: transform .2s, color .2s }
 a.log-row:hover .log-go { color: var(--ink); transform: translate(2px, -2px) }
 
-/* ---------- links ---------- */
+/* ---------- about ---------- */
+.bio {
+  max-width: 40em;
+  margin-bottom: clamp(40px, 6vw, 72px);
+  font-size: clamp(16px, 1.5vw, 19px);
+  line-height: 2;
+  word-break: auto-phrase;   /* Japanese breaks between phrases where supported */
+}
+.bio p + p { margin-top: .9em }
 .tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(12px, 1.6vw, 20px) }
 .tiles > li { display: flex }   /* the tile fills its row, so a row of tiles share one height */
 .tile {
@@ -514,7 +522,7 @@ a.tile:hover .circle { background: var(--orange); border-color: var(--orange); c
       <button type="button" class="tab pill label" role="tab" id="tab-sow" aria-controls="sow" aria-selected="false" tabindex="-1">SOW</button>
       <button type="button" class="tab pill label" role="tab" id="tab-wgen" aria-controls="wgen" aria-selected="false" tabindex="-1">W GEN</button>
       <button type="button" class="tab pill label" role="tab" id="tab-works" aria-controls="works" aria-selected="false" tabindex="-1">Works</button>
-      <button type="button" class="tab pill label" role="tab" id="tab-links" aria-controls="links" aria-selected="false" tabindex="-1">Links</button>
+      <button type="button" class="tab pill label" role="tab" id="tab-about" aria-controls="about" aria-selected="false" tabindex="-1">About</button>
     </div>
   </div>
 </header>
@@ -577,7 +585,7 @@ a.tile:hover .circle { background: var(--orange); border-color: var(--orange); c
   <section class="panel wrap" id="price" role="tabpanel" aria-labelledby="tab-price" hidden>
     <div class="price-head">
       <h2 class="panel-title display">Price</h2>
-      <a class="ask pill label" href="#links" data-tab="links">Contact →</a>
+      <a class="ask pill label" href="#about" data-tab="about">Contact →</a>
     </div>
 
     <div class="rates">
@@ -720,9 +728,14 @@ a.tile:hover .circle { background: var(--orange); border-color: var(--orange); c
     </ol>
   </section>
 
-  <!-- LINKS -->
-  <section class="panel wrap" id="links" role="tabpanel" aria-labelledby="tab-links" hidden>
-    <h2 class="panel-title display">Links</h2>
+  <!-- ABOUT -->
+  <section class="panel wrap" id="about" role="tabpanel" aria-labelledby="tab-about" hidden>
+    <h2 class="panel-title display">About</h2>
+    <div class="bio">
+      <p>2013年、13歳の誕生日にエレキギターを買ってもらい音楽を始める。</p>
+      <p>2018年頃DTMに触れ始める。</p>
+      <p>ヴィジュアル系バンドをやったりなんだかんだを経て現在はミックス、マスタリングのお仕事を頂きながらDubstepやDrum &amp; Bassなどのベースミュージックを主軸に制作活動を行なっている。</p>
+    </div>
     <ul class="tiles">
       <li>
         <a class="tile" href="https://x.com/eth4n_alc" target="_blank" rel="noopener">
@@ -772,6 +785,7 @@ a.tile:hover .circle { background: var(--orange); border-color: var(--orange); c
   function select(id, { focus = false, scroll = true } = {}) {
     if (id === 'history') id = 'works';   // the tab was called History before
     if (id === 'morpheus') id = 'wgen';   // ...and this one MORPHEUS
+    if (id === 'links') id = 'about';     // ...and this one Links
     if (!ids.includes(id)) return;
     tabs.forEach(t => {
       const on = t.getAttribute('aria-controls') === id;
@@ -840,7 +854,7 @@ function embedApp(panelId, frameSel, ns, guess) {
 embedApp('sow', '.sow-app', 'sow', (f) => { f.style.height = Math.round(f.clientWidth * 330 / 1000 + 132) + 'px'; });
 embedApp('wgen', '.app-embed', 'morpheus', () => {});
 
-// Links: copy the mail address. If the clipboard is refused, select the text
+// About: copy the mail address. If the clipboard is refused, select the text
 // so the viewer can copy it themselves.
 (() => {
   const btn = document.getElementById('copy-mail');
