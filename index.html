@@ -289,23 +289,33 @@ a.product:hover .plate-shot { transform: scale(1.015) }
 }
 .meta span { white-space: nowrap }
 .meta .ver { color: var(--orange) }
-/* SIREN trial download strip, under the product tiles */
-.trial {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 16px clamp(16px, 2.4vw, 32px);
-  margin-top: clamp(12px, 1.8vw, 24px);
-  padding: clamp(20px, 2.8vw, 32px);
-  border: 1px solid var(--plate-line);
-  border-radius: var(--r-lg);
-  background: var(--plate);
-  color: var(--plate-fg);
+/* Wide tiles: the shot on the left, words and actions on the right. */
+.product.wide {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
 }
-.trial-text { flex: 1 1 320px; min-width: 0 }
-.trial-title { margin: 0 0 8px; font-size: clamp(17px, 1.8vw, 21px); font-weight: 600; letter-spacing: -.01em }
+.product.wide .plate { padding-bottom: clamp(20px, 2.8vw, 32px) }
+.side {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(16px, 2vw, 24px);
+  min-width: 0;
+  padding: clamp(20px, 2.8vw, 32px) clamp(20px, 2.8vw, 32px) clamp(20px, 2.8vw, 28px) 0;
+}
+.side .meta { margin: auto 0 0 }
+/* the framed block in a wide tile: SIREN's trial, AQUAMARINE's store link */
+.box {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: clamp(16px, 2vw, 22px);
+  border: 1px solid var(--plate-line);
+  border-radius: var(--r-md);
+}
+.trial-title { margin: 0; color: var(--orange) }
 .trial-note { margin: 0; color: var(--plate-dim); font-size: 13px; line-height: 1.7 }
-.trial-note + .trial-note { margin-top: 4px }
+.trial-note.small { font-size: 12px }
 .trial-dl { display: flex; flex-wrap: wrap; gap: 10px }
 .trial-dl .pill { display: inline-flex; gap: 10px; align-items: baseline; border-color: var(--gray-700); color: var(--plate-fg); text-decoration: none; padding: 12px 20px }
 .trial-dl .pill span { color: var(--plate-dim) }
@@ -508,6 +518,9 @@ a.tile:hover .circle { background: var(--orange); border-color: var(--orange); c
 
 @media (max-width: 900px) {
   .products { grid-template-columns: minmax(0, 1fr) }
+  .product.wide { grid-template-columns: minmax(0, 1fr) }
+  .product.wide .plate { padding-bottom: 0 }
+  .side { padding: clamp(20px, 2.8vw, 32px) }
   .tiles { grid-template-columns: minmax(0, 1fr) }
   .tile { min-height: 0 }
 }
@@ -583,34 +596,42 @@ a.tile:hover .circle { background: var(--orange); border-color: var(--orange); c
     </div>
 
     <div class="products">
-      <div class="product" id="siren">  <!-- no link until the Gumroad page is up -->
+      <!-- SIREN: no store link until the Gumroad page is up; the trial lives in the card -->
+      <div class="product wide" id="siren">
         <h3 class="vh">SIREN</h3>
         <div class="plate">
           <img class="plate-logo" src="img/siren-logo.webp" alt="SIREN" width="1000" height="245">
           <img class="plate-shot" src="img/siren-ui.webp" alt="SIREN の画面" width="1600" height="1013" loading="lazy">
         </div>
-        <p class="meta label"><span class="ver">v0.18.0</span><span>VST3</span><span>AU</span><span class="go circle" aria-hidden="true" style="visibility:hidden">↗</span></p>
+        <div class="side">
+          <div class="trial box" id="siren-trial">
+            <p class="trial-title label">14日間 無料トライアル</p>
+            <p class="trial-note">全機能をそのまま使えます。続けて使うときは、購入したライセンスキーを OPTIONS（左上のロゴ）に入力してください。</p>
+            <div class="trial-dl">
+              <a class="pill label" href="https://github.com/eth4nalcworks-blip/eth4n-walker-dsp/releases/download/siren-v0.18.0/SIREN-0.18.0-macOS.zip">macOS ↓<span>16 MB</span></a>
+              <a class="pill label" href="https://github.com/eth4nalcworks-blip/eth4n-walker-dsp/releases/download/siren-v0.18.0/SIREN-0.18.0-Setup.exe">Windows ↓<span>11 MB</span></a>
+            </div>
+            <p class="trial-note small">インストーラーは未署名です。Mac は初回に「システム設定 &gt; プライバシーとセキュリティ」で許可、Windows は「詳細情報 &gt; 実行」を選んでください。</p>
+          </div>
+          <p class="meta label"><span class="ver">v0.18.0</span><span>VST3</span><span>AU</span><span class="go circle" aria-hidden="true" style="visibility:hidden">↗</span></p>
+        </div>
       </div>
 
-      <a class="product" id="aquamarine" href="https://eth4n-alc.booth.pm/items/8761884" target="_blank" rel="noopener" aria-label="AQUAMARINE（BOOTH の商品ページ）">
+      <div class="product wide" id="aquamarine">
         <h3 class="vh">AQUAMARINE</h3>
         <div class="plate">
           <img class="plate-logo lift" src="img/aquamarine-logo.webp" alt="AQUAMARINE" width="1200" height="166">
           <img class="plate-shot" src="img/aquamarine-ui.webp" alt="AQUAMARINE の画面" width="1520" height="1244" loading="lazy">
         </div>
-        <p class="meta label"><span class="ver">v0.6.7</span><span>VST3</span><span>AU</span><span class="go circle" aria-hidden="true">↗</span></p>
-      </a>
-    </div>
-
-    <div class="trial" id="siren-trial">
-      <div class="trial-text">
-        <h3 class="trial-title">SIREN を14日間無料で試す</h3>
-        <p class="trial-note">全機能をそのまま使えます。続けて使うときは、購入したライセンスキーを SIREN の OPTIONS（左上のロゴ）から入力してください。</p>
-        <p class="trial-note">インストーラーはまだ署名していません。Mac は初回に「システム設定 &gt; プライバシーとセキュリティ」で許可、Windows は「詳細情報 &gt; 実行」を選んでください。</p>
-      </div>
-      <div class="trial-dl">
-        <a class="pill label" href="https://github.com/eth4nalcworks-blip/eth4n-walker-dsp/releases/download/siren-v0.18.0/SIREN-0.18.0-macOS.zip">macOS ↓<span>16 MB</span></a>
-        <a class="pill label" href="https://github.com/eth4nalcworks-blip/eth4n-walker-dsp/releases/download/siren-v0.18.0/SIREN-0.18.0-Setup.exe">Windows ↓<span>11 MB</span></a>
+        <div class="side">
+          <div class="box">
+            <p class="trial-title label">BOOTH で販売中</p>
+            <div class="trial-dl">
+              <a class="pill label" href="https://eth4n-alc.booth.pm/items/8761884" target="_blank" rel="noopener">購入ページ ↗</a>
+            </div>
+          </div>
+          <p class="meta label"><span class="ver">v0.6.7</span><span>VST3</span><span>AU</span><span class="go circle" aria-hidden="true" style="visibility:hidden">↗</span></p>
+        </div>
       </div>
     </div>
   </section>
