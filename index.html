@@ -258,7 +258,7 @@ button { font: inherit }
   overflow: hidden;
   transition: border-color .25s;
 }
-.product:hover { border-color: #4d4d4d }
+a.product:hover { border-color: #4d4d4d }
 .plate {
   flex: 1;
   display: flex;
@@ -277,7 +277,7 @@ button { font: inherit }
   object-fit: contain;
   transition: transform .6s cubic-bezier(.2, .7, .2, 1);
 }
-.product:hover .plate-shot { transform: scale(1.015) }
+a.product:hover .plate-shot { transform: scale(1.015) }
 .meta {
   display: grid;
   grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1fr) auto;
@@ -289,8 +289,30 @@ button { font: inherit }
 }
 .meta span { white-space: nowrap }
 .meta .ver { color: var(--orange) }
+/* SIREN trial download strip, under the product tiles */
+.trial {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px clamp(16px, 2.4vw, 32px);
+  margin-top: clamp(12px, 1.8vw, 24px);
+  padding: clamp(20px, 2.8vw, 32px);
+  border: 1px solid var(--plate-line);
+  border-radius: var(--r-lg);
+  background: var(--plate);
+  color: var(--plate-fg);
+}
+.trial-text { flex: 1 1 320px; min-width: 0 }
+.trial-title { margin: 0 0 8px; font-size: clamp(17px, 1.8vw, 21px); font-weight: 600; letter-spacing: -.01em }
+.trial-note { margin: 0; color: var(--plate-dim); font-size: 13px; line-height: 1.7 }
+.trial-note + .trial-note { margin-top: 4px }
+.trial-dl { display: flex; flex-wrap: wrap; gap: 10px }
+.trial-dl .pill { display: inline-flex; gap: 10px; align-items: baseline; border-color: var(--gray-700); color: var(--plate-fg); text-decoration: none; padding: 12px 20px }
+.trial-dl .pill span { color: var(--plate-dim) }
+.trial-dl .pill:hover { background: var(--orange); border-color: var(--orange); color: var(--ink) }
+.trial-dl .pill:hover span { color: var(--ink) }
 .meta .go { border-color: var(--gray-700); color: var(--plate-fg) }
-.product:hover .go { background: var(--orange); border-color: var(--orange); color: var(--ink) }
+a.product:hover .go { background: var(--orange); border-color: var(--orange); color: var(--ink) }
 
 /* ---------- price ---------- */
 /* A ledger on the page itself, hairlines and no tiles. The categories and the
@@ -481,7 +503,7 @@ a.tile:hover .circle { background: var(--orange); border-color: var(--orange); c
 }
 @media (prefers-reduced-motion: reduce) {
   .pill, .circle, .product, .plate-shot, .tile, .listen, .sow-card, .log-go { transition: none }
-  .product:hover .plate-shot { transform: none }
+  a.product:hover .plate-shot { transform: none }
 }
 
 @media (max-width: 900px) {
@@ -561,14 +583,14 @@ a.tile:hover .circle { background: var(--orange); border-color: var(--orange); c
     </div>
 
     <div class="products">
-      <a class="product" id="siren" href="https://eth4n-alc.booth.pm/items/8639530" target="_blank" rel="noopener" aria-label="SIREN（BOOTH の商品ページ）">
+      <div class="product" id="siren">  <!-- no link until the Gumroad page is up -->
         <h3 class="vh">SIREN</h3>
         <div class="plate">
           <img class="plate-logo" src="img/siren-logo.webp" alt="SIREN" width="1000" height="245">
           <img class="plate-shot" src="img/siren-ui.webp" alt="SIREN の画面" width="1600" height="1013" loading="lazy">
         </div>
-        <p class="meta label"><span class="ver">v0.16.0 Beta</span><span>VST3</span><span>AU</span><span class="go circle" aria-hidden="true">↗</span></p>
-      </a>
+        <p class="meta label"><span class="ver">v0.18.0</span><span>VST3</span><span>AU</span><span class="go circle" aria-hidden="true" style="visibility:hidden">↗</span></p>
+      </div>
 
       <a class="product" id="aquamarine" href="https://eth4n-alc.booth.pm/items/8761884" target="_blank" rel="noopener" aria-label="AQUAMARINE（BOOTH の商品ページ）">
         <h3 class="vh">AQUAMARINE</h3>
@@ -578,6 +600,18 @@ a.tile:hover .circle { background: var(--orange); border-color: var(--orange); c
         </div>
         <p class="meta label"><span class="ver">v0.6.7</span><span>VST3</span><span>AU</span><span class="go circle" aria-hidden="true">↗</span></p>
       </a>
+    </div>
+
+    <div class="trial" id="siren-trial">
+      <div class="trial-text">
+        <h3 class="trial-title">SIREN を14日間無料で試す</h3>
+        <p class="trial-note">全機能をそのまま使えます。続けて使うときは、購入したライセンスキーを SIREN の OPTIONS（左上のロゴ）から入力してください。</p>
+        <p class="trial-note">インストーラーはまだ署名していません。Mac は初回に「システム設定 &gt; プライバシーとセキュリティ」で許可、Windows は「詳細情報 &gt; 実行」を選んでください。</p>
+      </div>
+      <div class="trial-dl">
+        <a class="pill label" href="https://github.com/eth4nalcworks-blip/eth4n-walker-dsp/releases/download/siren-v0.18.0/SIREN-0.18.0-macOS.zip">macOS ↓<span>16 MB</span></a>
+        <a class="pill label" href="https://github.com/eth4nalcworks-blip/eth4n-walker-dsp/releases/download/siren-v0.18.0/SIREN-0.18.0-Setup.exe">Windows ↓<span>11 MB</span></a>
+      </div>
     </div>
   </section>
 
